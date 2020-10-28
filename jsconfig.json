@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "module": "esnext",
+    "target": "es2020",
+    "plugins": [
+      {
+        "name": "typescript-styled-plugin",
+        "validate": true,
+        "lint": {
+          "validProperties": ["compose-with", "composes", "grid-columns", "@value"],
+          // "validAtRules": ["value"],
+          "unknownAtRules": "warning",
+        },
+        "tags": [
+          "stylis",
+        ]
+      }
+    ]
+  },
+  "exclude": ["node_modules"],
+  "include": ["src/client/**/*"]
+}

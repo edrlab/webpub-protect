@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>webpub protect</title>
+    <meta charset="UTF-8" />
+    <!-- meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=10, user-scalable=yes"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body,
+      iframe {
+        margin: 0;
+        padding: 0;
+        background-color: white;
+        color: black;
+      }
+      body {
+        padding-left: 6em;
+        padding-right: 6em;
+        font-size: 1.3em;
+        line-height: 1.5em;
+      }
+      h1,
+      h2 {
+        font-family: sans-serif;
+      }
+      iframe {
+        border: 4px solid magenta;
+      }
+      textarea {
+        font-size: 1.2em;
+        font-family: monospace;
+        float: right;
+        width: 24em;
+        height: 4em;
+        border: 2px solid green;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>webpub protect</h1>
+    <hr style="margin-top: 5em" />
+    <h2>Original documents:</h2>
+    <p>(links open new browser windows/tabs)</p>
+    <ul>
+      <li>
+        <a target="_BLANK" href="/content/doc1.html">Chapter #1</a>
+      </li>
+      <li>
+        <a target="_BLANK" href="/content/doc2.html">Chapter #2</a>
+      </li>
+      <li>
+        <a target="_BLANK" href="/content/doc3.html">Chapter #3</a>
+      </li>
+    </ul>
+    <hr style="margin-top: 5em" />
+    <h2>Original documents in iframe:</h2>
+    <textarea placeholder="(try clipboard copy/paste here)"></textarea>
+    <ol>
+      <li>text can be selected</li>
+      <li>
+        selected text can be copied to clipboard (try in the text box
+        <span style="font-family: monospace">&rArr;&rArr;&rArr;</span>)
+      </li>
+      <li>context menu can be displayed with mouse right-click</li>
+      <li>
+        web inspector / debugger can be opened via context menu ("inspect
+        element")
+      </li>
+      <li>the original document markup is revealed in the web inspector</li>
+    </ol>
+    <iframe style="width: 100%; height: 500px" src="/content/doc1.html">
+    </iframe>
+    <hr style="margin-top: 5em" />
+    <h2>Protected documents in iframe:</h2>
+    <textarea placeholder="(try clipboard copy/paste here)"></textarea>
+    <ol>
+      <li>text cannot be selected</li>
+      <li>
+        text cannot be copied to clipboard (try in the text box
+        <span style="font-family: monospace">&rArr;&rArr;&rArr;</span>)
+      </li>
+      <li>context menu cannot be displayed with mouse right-click</li>
+      <li>
+        web inspector / debugger cannot be opened via context menu ("inspect
+        element")
+      </li>
+      <li>
+        the original document markup can still be revealed in the web inspector
+        (using the top-level web browser menu to open the debugging tools, and
+        searching for the iframe in the DOM)
+      </li>
+    </ol>
+    <iframe style="width: 100%; height: 500px" src="/protect/content/doc1.html">
+    </iframe>
+    <hr />
+    <div id="root"></div>
+    <script type="module" src="./index.js"></script>
+  </body>
+</html>

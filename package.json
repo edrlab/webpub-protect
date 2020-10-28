@@ -1,0 +1,49 @@
+{
+  "name": "webpub-protect",
+  "version": "0.0.0-alpha-0",
+  "description": "Protection of Web Publications",
+  "scripts": {
+    "start": "node --version && cross-env DEBUG=* PORT=3333 node \"./src/server/main.js\"",
+    "eslint-fix": "eslint --fix \"./src/**/*.js\"",
+    "stylelint-fix": "stylelint --fix \"./src/**/*\"",
+    "prettier-fix": "prettier --write \"./src/**/*.{css,html,js,json,md,yml}\"",
+    "lint-fix": "npm run stylelint-fix && npm run eslint-fix && npm run prettier-fix",
+    "lint-eslint": "eslint \"./src/**/*.js\"",
+    "lint-stylelint": "npm run lint-stylelint-html && npm run lint-stylelint-js",
+    "lint-stylelint-html": "stylelint --syntax html \"./src/**/*.{html,htm}\"",
+    "lint-stylelint-js": "stylelint --syntax css-in-js \"./src/**/*.js\"",
+    "lint-prettier": "prettier --check --no-write --loglevel log ./src/",
+    "lint": "npm run lint-stylelint && npm run lint-eslint && npm run lint-prettier",
+    "deploy": "firebase deploy --project webpub-protect"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/edrlab/webpub-protect.git"
+  },
+  "author": "Daniel Weck (EDRLab)",
+  "email": "daniel.weck@gmail.com",
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/edrlab/webpub-protect/issues"
+  },
+  "homepage": "https://github.com/edrlab/webpub-protect#readme",
+  "devDependencies": {
+    "babel-eslint": "^10.1.0",
+    "cross-env": "^7.0.2",
+    "eslint": "^7.12.1",
+    "eslint-config-prettier": "^6.15.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "prettier": "^2.1.2",
+    "stylelint": "^13.7.2",
+    "stylelint-config-prettier": "^8.0.2",
+    "stylelint-config-standard": "^20.0.0",
+    "typescript": "^4.0.5",
+    "typescript-styled-plugin": "^0.15.0"
+  },
+  "dependencies": {
+    "chalk": "^4.1.0",
+    "debug": "^4.2.0",
+    "express": "^4.17.1"
+  }
+}

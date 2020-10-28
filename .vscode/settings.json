@@ -1,0 +1,17 @@
+{
+    "scss.validate": false,
+    "css.validate": false,
+    "less.validate": false,
+    "search.exclude": {
+        ".history": true,
+        "node_modules": true,
+        "package-lock.json": true
+    },
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "[javascript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "editor.formatOnSave": false,
+    "editor.formatOnPaste": false,
+    "editor.tabSize": 2,
+}
