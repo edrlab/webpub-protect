@@ -14,7 +14,8 @@
     "lint-stylelint-js": "stylelint --syntax css-in-js \"./src/**/*.js\"",
     "lint-prettier": "prettier --check --no-write --loglevel log ./src/",
     "lint": "npm run lint-stylelint && npm run lint-eslint && npm run lint-prettier",
-    "deploy": "firebase deploy --project webpub-protect"
+    "heroku-prebuild": "echo \"heroku-prebuild\"",
+    "heroku-postbuild": "echo \"heroku-postbuild\""
   },
   "repository": {
     "type": "git",
