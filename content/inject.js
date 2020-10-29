@@ -31,6 +31,17 @@ const onAClick = (ev) => {
   newAEl.click();
 };
 
+const onDragstart = (evt) => {
+  evt.preventDefault();
+};
+const feature7 = (activate) => {
+  if (activate) {
+    document.body.addEventListener('dragstart', onDragstart);
+  } else {
+    document.body.removeEventListener('dragstart', onDragstart);
+  }
+};
+
 const onCopy = (evt) => {
   evt.preventDefault();
   const selection = document.getSelection();
@@ -116,6 +127,8 @@ Object.keys(inputs).forEach((key) => {
     feature5(val);
   } else if (key === 'checkBox_6') {
     feature6(val);
+  } else if (key === 'checkBox_7') {
+    feature7(val);
   }
 });
 
@@ -128,13 +141,11 @@ window.addEventListener('message', (evt) => {
     feature5(evt.data.checkBox_5);
   } else if (typeof evt.data.checkBox_6 !== 'undefined') {
     feature6(evt.data.checkBox_6);
+  } else if (typeof evt.data.checkBox_7 !== 'undefined') {
+    feature7(evt.data.checkBox_7);
   }
 });
 
 // document.body.addEventListener('contextmenu', (evt) => {
-//   evt.preventDefault();
-// });
-
-// document.body.addEventListener('dragstart', (evt) => {
 //   evt.preventDefault();
 // });
