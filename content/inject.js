@@ -31,6 +31,25 @@ const onAClick = (ev) => {
   newAEl.click();
 };
 
+const onCopy = (evt) => {
+  evt.preventDefault();
+  const selection = document.getSelection();
+  if (selection) {
+    const str = selection.toString();
+    if (str) {
+      alert(`Clipboard copy PREVENTED: "${str}"`);
+    }
+  }
+  document.getSelection().empty();
+};
+const feature6 = (activate) => {
+  if (activate) {
+    document.body.addEventListener('copy', onCopy);
+  } else {
+    document.body.removeEventListener('copy', onCopy);
+  }
+};
+
 const onSelectstart = (evt) => {
   evt.preventDefault();
 };
@@ -95,6 +114,8 @@ Object.keys(inputs).forEach((key) => {
     feature1(val);
   } else if (key === 'checkBox_5') {
     feature5(val);
+  } else if (key === 'checkBox_6') {
+    feature6(val);
   }
 });
 
@@ -105,20 +126,10 @@ window.addEventListener('message', (evt) => {
     feature1(evt.data.checkBox_1);
   } else if (typeof evt.data.checkBox_5 !== 'undefined') {
     feature5(evt.data.checkBox_5);
+  } else if (typeof evt.data.checkBox_6 !== 'undefined') {
+    feature6(evt.data.checkBox_6);
   }
 });
-
-// document.body.addEventListener('copy', (evt) => {
-//   evt.preventDefault();
-//   const selection = document.getSelection();
-//   if (selection) {
-//     const str = selection.toString();
-//     if (str) {
-//       alert(`Clipboard copy PREVENTED: "${str}"`);
-//     }
-//   }
-//   document.getSelection().empty();
-// });
 
 // document.body.addEventListener('contextmenu', (evt) => {
 //   evt.preventDefault();
