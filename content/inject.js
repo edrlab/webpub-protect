@@ -31,6 +31,24 @@ const onAClick = (ev) => {
   newAEl.click();
 };
 
+const onSelectstart = (evt) => {
+  evt.preventDefault();
+};
+const selectStyle =
+  '-webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;';
+const feature5 = (activate) => {
+  const bodyStyle = document.body.getAttribute('style') || '';
+
+  document.getSelection().empty();
+  if (activate) {
+    window.addEventListener('selectstart', onSelectstart);
+    document.body.setAttribute('style', bodyStyle + selectStyle);
+  } else {
+    window.removeEventListener('selectstart', onSelectstart);
+    document.body.setAttribute('style', bodyStyle.replace(selectStyle, ''));
+  }
+};
+
 const feature1 = (activate) => {
   console.log('feature1', activate);
 
@@ -75,6 +93,8 @@ Object.keys(inputs).forEach((key) => {
 
   if (key === 'checkBox_1') {
     feature1(val);
+  } else if (key === 'checkBox_5') {
+    feature5(val);
   }
 });
 
@@ -83,19 +103,10 @@ window.addEventListener('message', (evt) => {
 
   if (typeof evt.data.checkBox_1 !== 'undefined') {
     feature1(evt.data.checkBox_1);
+  } else if (typeof evt.data.checkBox_5 !== 'undefined') {
+    feature5(evt.data.checkBox_5);
   }
 });
-
-// window.addEventListener('selectstart', (evt) => {
-//   evt.preventDefault();
-// });
-
-// const bodyStyle = document.body.getAttribute('style') || '';
-// document.body.setAttribute(
-//   'style',
-//   bodyStyle +
-//     '-webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;',
-// );
 
 // document.body.addEventListener('copy', (evt) => {
 //   evt.preventDefault();
