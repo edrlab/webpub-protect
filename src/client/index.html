@@ -36,6 +36,30 @@
       .mono {
         font-family: monospace;
       }
+      input[type='checkbox'] {
+        vertical-align: middle;
+        width: 3em;
+        height: 3em;
+      }
+      ol {
+        counter-reset: item;
+      }
+
+      ol > li {
+        list-style-type: none;
+        text-indent: -1em;
+        counter-increment: item;
+        line-height: 1.5em;
+        margin-bottom: 1em;
+        font-size: 1.1em;
+      }
+
+      ol > li::before {
+        display: inline-block;
+        font-weight: bold;
+        padding-right: 1em;
+        content: counter(item) '.';
+      }
     </style>
   </head>
   <body>
@@ -77,7 +101,10 @@
           >curl -v http://domain.org/content/doc[1|2|3].html</span
         >)
       </li>
-      <li>the HTTP referer header is provided to the destination URL during a cross-origin navigation</li>
+      <li>
+        the HTTP referer header is provided to the destination URL during a
+        cross-origin navigation
+      </li>
       <li>
         the browser's "view source" feature or a fetch response's body contains
         human-readable static document markup
@@ -101,16 +128,33 @@
     </iframe>
     <hr style="margin-top: 5em" / -->
     <h2>"Protected" documents in iframe:</h2>
+    <iframe
+      id="frame"
+      sandbox="allow-scripts allow-popups allow-same-origin"
+      referrerpolicy="same-origin"
+      style="width: 100%; height: 500px"
+      src="/protect-root"
+    >
+    </iframe>
     <ol>
       <li>
+        <input type="checkbox" id="checkBox_0" disabled />
         <strike
           >the document URLs are not predictable (<span class="mono"
             >/protect/[RANDOM]</span
           >)</strike
         >
       </li>
-      <li>mouse hover or keyboard focus on hyperlinks does not reveals target URLs</li>
       <li>
+        <input
+          type="checkbox"
+          id="checkBox_1"
+          onclick="window.onCheckBoxClick('checkBox_1')"
+        />
+        mouse hover or keyboard focus on hyperlinks does not reveals target URLs
+      </li>
+      <li>
+        <input type="checkbox" id="checkBox_2" disabled />
         the URLs cannot be fetched from external requests without the required
         contextual HTTP Referer header (however, note that this can easily be
         worked out, e.g.:
@@ -119,30 +163,46 @@
           http://domain.org/protect/...</span
         >)
       </li>
-      <li>the HTTP referer header is not provided to the destination URL during a cross-origin navigation</li>
       <li>
+        <input type="checkbox" id="checkBox_3" disabled />
+        the HTTP referer header is not provided to the destination URL during a
+        cross-origin navigation
+      </li>
+      <li>
+        <input type="checkbox" id="checkBox_4" disabled />
         the browser's "view source" feature or a fetch response's body contains
         no human-readable static document markup (the DOM body is generated
         dynamically by Javascript)
       </li>
-      <li>the text cannot be selected</li>
-      <li>the document text cannot be copied to clipboard</li>
       <li>
+        <input type="checkbox" id="checkBox_5" disabled />the text cannot be
+        selected
+      </li>
+      <li>
+        <input type="checkbox" id="checkBox_6" disabled />the document text
+        cannot be copied to clipboard
+      </li>
+      <li>
+        <input type="checkbox" id="checkBox_7" disabled />
         the images, links, selected text (etc.) cannot be dragged and dropped
         onto a consuming target
       </li>
-      <li>the context menu cannot be displayed with mouse right-click</li>
       <li>
+        <input type="checkbox" id="checkBox_8" disabled />the context menu
+        cannot be displayed with mouse right-click
+      </li>
+      <li>
+        <input type="checkbox" id="checkBox_9" disabled />
         the web inspector / debugger cannot be opened via context menu ("inspect
         element")
       </li>
       <li>
+        <input type="checkbox" id="checkBox_10" disabled />
         the original document markup can still be revealed in the web inspector
         (using the top-level web browser menu to open the debugging tools, and
         searching for the iframe in the DOM)
       </li>
     </ol>
-    <iframe sandbox="allow-scripts allow-popups" referrerpolicy="same-origin" style="width: 100%; height: 500px" src="/protect-root"> </iframe>
     <hr />
     <div id="root"></div>
     <script type="module" src="./index.js"></script>

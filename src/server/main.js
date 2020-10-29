@@ -123,19 +123,19 @@ routerProtect.get('/', (req, res, next) => {
     req.get('X-Forwarded-Proto') === 'https';
   debug('isSecureHttp', isSecureHttp);
 
-  let headInject1 = '';
-  if (doObfuscateContentPaths) {
-    let asset_ = asset.split('/');
-    asset_ = asset_.slice(0, asset_.length - 1);
-    asset_.push(encodeURIComponent(req.params.asset));
-    const baseUrl = `http${isSecureHttp ? 's' : ''}://${
-      req.headers.host
-    }/${asset_.join('/')}`;
-    debug('baseUrl', baseUrl);
-    headInject1 = `
-    <base href="${baseUrl}" />
-    `;
-  }
+  // let headInject1 = '';
+  // if (doObfuscateContentPaths) {
+  //   let asset_ = asset.split('/');
+  //   asset_ = asset_.slice(0, asset_.length - 1);
+  //   asset_.push(encodeURIComponent(req.params.asset));
+  //   const baseUrl = `http${isSecureHttp ? 's' : ''}://${
+  //     req.headers.host
+  //   }/${asset_.join('/')}`;
+  //   debug('baseUrl', baseUrl);
+  //   headInject1 = `
+  //   <base href="${baseUrl}" />
+  //   `;
+  // }
 
   if (!req.headers.referer) {
     const str = `ASSET REFERER MISSING: ${asset}`;
@@ -157,26 +157,66 @@ routerProtect.get('/', (req, res, next) => {
       debug('skip non HTML', req.url);
       return next();
     }
-    const originalFileStr = fs.readFileSync(path.join(process.cwd(), asset), {
-      encoding: 'utf8',
-    });
-    const bodyStart = originalFileStr.indexOf('<body');
-    const bodyEnd = originalFileStr.indexOf('</body>', bodyStart);
-    const bodyStr = originalFileStr.substr(bodyStart, bodyEnd - bodyStart + 7);
-
-    const headInject2 = `
-    <script type="text/javascript">
-    window.__BODY__ = '${Buffer.from(bodyStr).toString('base64')}';
-    </script>
-    <script type="text/javascript" src="/content/inject.js"></script>
-    `;
-    const responseStr = originalFileStr
+    const originalFileStr = fs
+      .readFileSync(path.join(process.cwd(), asset), {
+        encoding: 'utf8',
+      })
       .replace(
-        /<body[\s\S]*?<\/body>/gm,
-        '<body style="padding-top: 2em; padding-bottom: 2em; margin: 0; border: 0; box-sizing: border-box; font-size: 2em; font-family: sans; background-color: white; color: black;"></body>', // Loading... (delay just for demo)
-      )
-      .replace(/<head([\s\S]*?)>/gm, `<head$1>${headInject1}`)
-      .replace(/<\/head>/, `${headInject2}</head>`);
+        /<\/body[\s\S]*?>/gm,
+        '<script type="text/javascript" src="/content/inject.js"></script></body>',
+      );
+
+    const responseStr = `
+<!DOCTYPE html>
+<html>
+<head>
+<title>...</title>
+<meta charset="UTF-8" />
+<script type="text/javascript">
+window.addEventListener('load', () => {
+  document.write(atob('${Buffer.from(originalFileStr).toString('base64')}'));
+});
+</script>
+</head>
+<body>
+</body>
+</html>
+    `;
+
+    //     const bodyStart = originalFileStr.indexOf('<body');
+    //     const bodyEnd = originalFileStr.indexOf('</body>', bodyStart);
+    //     const bodyStr = originalFileStr.substr(bodyStart, bodyEnd - bodyStart + 7);
+
+    //     const headInject2 = `
+    //     <script id="scriptToRemove" type="text/javascript">
+    //     window.__BODY__ = '${Buffer.from(bodyStr).toString('base64')}';
+    //     </script>
+    //     `;
+    //     const responseStr = originalFileStr
+    //       .replace(
+    //         /<body[\s\S]*?<\/body>/gm,
+    //         `<body style="padding-top: 2em; padding-bottom: 2em; margin: 0; border: 0; box-sizing: border-box; font-size: 2em; font-family: sans; background-color: white; color: black;">
+    // <script type="text/javascript">
+    // document.addEventListener("DOMContentLoaded", () => {
+    //   const elToRemove = document.getElementById("scriptToRemove");
+    //   elToRemove.parentElement.removeChild(elToRemove);
+
+    //   document.body.replaceWith(new DOMParser().parseFromString(atob(window.__BODY__), "text/html").body);
+    //   /*
+    //   setTimeout(() => {
+    //     const script = document.createElement("script");
+    //     script.setAttribute("type", "text/javascript");
+    //     script.setAttribute("src", "/content/inject.js");
+    //     document.head.appendChild(script);
+    //   }, 500);
+    //   */
+    // });
+    // </script>
+    // </body>
+    // `,
+    //       )
+    //       .replace(/<head([\s\S]*?)>/gm, `<head$1>${headInject1}`)
+    //       .replace(/<\/head>/, `${headInject2}</head>`);
 
     return res.status(200).type('text/html').send(responseStr);
   } catch (err) {
