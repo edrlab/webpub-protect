@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   console.log(`INJECT DOMContentLoaded: ${document.readyState}`);
 });
 
+document.getElementById('location').textContent = location.href;
+
 // const hasStorageAccess = await document.hasStorageAccess();
 // console.log('hasStorageAccess', hasStorageAccess);
 

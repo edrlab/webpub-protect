@@ -133,7 +133,6 @@
       sandbox="allow-scripts allow-popups allow-same-origin"
       referrerpolicy="same-origin"
       style="width: 100%; height: 500px"
-      src="/protect-root"
     >
     </iframe>
     <ol>
@@ -154,7 +153,11 @@
         mouse hover or keyboard focus on hyperlinks does not reveals target URLs
       </li>
       <li>
-        <input type="checkbox" id="checkBox_2" disabled />
+        <input
+          type="checkbox"
+          id="checkBox_2"
+          onclick="window.onCheckBoxClick('checkBox_2', true)"
+        />
         the URLs cannot be fetched from external requests without the required
         contextual HTTP Referer header (however, note that this can easily be
         worked out, e.g.:
@@ -169,7 +172,11 @@
         cross-origin navigation
       </li>
       <li>
-        <input type="checkbox" id="checkBox_4" disabled />
+        <input
+          type="checkbox"
+          id="checkBox_4"
+          onclick="window.onCheckBoxClick('checkBox_4', true)"
+        />
         the browser's "view source" feature or a fetch response's body contains
         no human-readable static document markup (the DOM body is generated
         dynamically by Javascript)

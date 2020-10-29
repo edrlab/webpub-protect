@@ -4,7 +4,7 @@ const express = require('express');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-
+const cookieParser = require('cookie-parser');
 // const http = require('http');
 
 const debug = debug_('webpub-protect');
@@ -48,6 +48,8 @@ const setResponseCORS = (res) => {
 };
 
 const expressApp = express();
+
+expressApp.use(cookieParser());
 
 // TODO: HTTP header `X-Robots-Tag` === `none`?
 expressApp.get('/robots.txt', (_req, res) => {
@@ -111,6 +113,17 @@ routerProtect.get('/', (req, res, next) => {
   debug('req.query', req.query);
   debug('req.headers', req.headers);
 
+  let checkBoxes = {};
+  const data = req.query.checkBoxes || req.cookies.checkBoxes;
+  if (data) {
+    checkBoxes = JSON.parse(data);
+    debug(checkBoxes);
+
+    res.cookie('checkBoxes', data, {
+      signed: false,
+    });
+  }
+
   // req.params are already decodeURIComponent()
   const asset = doObfuscateContentPaths
     ? deObfuscateContentPath(req.params.asset)
@@ -137,19 +150,21 @@ routerProtect.get('/', (req, res, next) => {
   //   `;
   // }
 
-  if (!req.headers.referer) {
-    const str = `ASSET REFERER MISSING: ${asset}`;
-    debug(str);
-    return res.status(500).send(str);
-  }
-  const ref = req.headers.referer.replace(/^https?:\/\//, '');
-  if (
-    !ref.startsWith(`${req.headers.host}/app`) &&
-    !ref.startsWith(`${req.headers.host}/protect/`)
-  ) {
-    const str = `ASSET REFERER INCORRECT: ${asset} [${req.headers.host}] (${ref} ===> ${req.headers.referer})`;
-    debug(str);
-    return res.status(500).send(str);
+  if (checkBoxes.checkBox_2) {
+    if (!req.headers.referer) {
+      const str = `ASSET REFERER MISSING: ${asset}`;
+      debug(str);
+      return res.status(500).send(str);
+    }
+    const ref = req.headers.referer.replace(/^https?:\/\//, '');
+    if (
+      !ref.startsWith(`${req.headers.host}/app`) &&
+      !ref.startsWith(`${req.headers.host}/protect/`)
+    ) {
+      const str = `ASSET REFERER INCORRECT: ${asset} [${req.headers.host}] (${ref} ===> ${req.headers.referer})`;
+      debug(str);
+      return res.status(500).send(str);
+    }
   }
 
   try {
@@ -166,7 +181,8 @@ routerProtect.get('/', (req, res, next) => {
         '<script type="text/javascript" src="/content/inject.js"></script></body>',
       );
 
-    const responseStr = `
+    const responseStr = checkBoxes.checkBox_4
+      ? `
 <!DOCTYPE html>
 <html>
 <head>
@@ -174,14 +190,17 @@ routerProtect.get('/', (req, res, next) => {
 <meta charset="UTF-8" />
 <script type="text/javascript">
 window.addEventListener('load', () => {
-  document.write(atob('${Buffer.from(originalFileStr).toString('base64')}'));
+  setTimeout(() => {
+    document.write(atob('${Buffer.from(originalFileStr).toString('base64')}'));
+  }, 1000);
 });
 </script>
 </head>
 <body>
 </body>
 </html>
-    `;
+    `
+      : originalFileStr;
 
     //     const bodyStart = originalFileStr.indexOf('<body');
     //     const bodyEnd = originalFileStr.indexOf('</body>', bodyStart);
@@ -232,14 +251,14 @@ expressApp.param('asset', (req, _res, next, value, _name) => {
 expressApp.use('/protect/:asset(*)', routerProtect);
 expressApp.use('/protect/content', express.static('content/', staticOptions));
 
-expressApp.use('/protect-root', (_req, res) => {
+expressApp.use('/protect-root', (req, res) => {
   res.redirect(
     301,
     `/protect/${
       doObfuscateContentPaths
         ? encodeURIComponent(obfuscateContentPath('content/doc1.html'))
         : 'content/doc1.html'
-    }?key1=value1&key2=value2#anchor`,
+    }?checkBoxes=${req.query.checkBoxes}&key1=value1&key2=value2#anchor`,
   );
 });
 
