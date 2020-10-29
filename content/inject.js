@@ -54,7 +54,12 @@ document.addEventListener('DOMContentLoaded', () => {
         aEl.addEventListener('click', (ev) => {
           ev.preventDefault();
           const href = ev.currentTarget.getAttribute('data-href-resolved');
-          location.href = href;
+          // this doesn't forward HTTP referer!
+          // location.href = href;
+          // location.replace(href);
+          const newAEl = document.createElement('a');
+          newAEl.setAttribute('href', href);
+          newAEl.click();
         });
       });
     }, 100);

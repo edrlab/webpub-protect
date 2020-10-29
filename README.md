@@ -5,5 +5,4 @@ Live demo (automated deployment from this repository): https://webpub-protect.he
 Local testing:
 
 1) `npm install`
-2) `npm start`
-3) open web browser at URL `http://localhost:3333/app`
+2) `npm start` (automatically opens web browser at URL `http://localhost:3333/app`)

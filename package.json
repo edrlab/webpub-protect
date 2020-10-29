@@ -3,7 +3,7 @@
   "version": "0.0.0-alpha-0",
   "description": "Protection of Web Publications",
   "scripts": {
-    "start": "node --version && cross-env DEBUG=* PORT=3333 node \"./src/server/main.js\"",
+    "start": "node --version && concurrently --raw \"cross-env DEBUG=* PORT=3333 NPM_CONFIG_COLOR=always COLORS=1 FORCE_COLOR=1 node ./src/server/main.js\" \"open-cli http://localhost:3333/app\"",
     "eslint-fix": "eslint --fix \"./src/**/*.js\"",
     "stylelint-fix": "stylelint --fix \"./src/**/*\"",
     "prettier-fix": "prettier --write \"./src/**/*.{css,html,js,json,md,yml}\"",
@@ -30,11 +30,13 @@
   "homepage": "https://github.com/edrlab/webpub-protect#readme",
   "devDependencies": {
     "babel-eslint": "^10.1.0",
+    "concurrently": "^5.3.0",
     "cross-env": "^7.0.2",
     "eslint": "^7.12.1",
     "eslint-config-prettier": "^6.15.0",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^3.1.4",
+    "open-cli": "^6.0.1",
     "prettier": "^2.1.2",
     "stylelint": "^13.7.2",
     "stylelint-config-prettier": "^8.0.2",

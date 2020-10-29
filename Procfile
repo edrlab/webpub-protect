@@ -1,1 +1,1 @@
-web: node --version && npm --version && DEBUG=* node "./src/server/main.js"
+web: node --version && npm --version && DEBUG=* COLORS=0 node "./src/server/main.js"

@@ -63,8 +63,6 @@
         >)
       </li>
     </ul>
-    <hr style="margin-top: 5em" />
-    <h2>Original documents in iframe:</h2>
     <ol>
       <li>
         the document URLs are predictable (<span class="mono"
@@ -79,6 +77,7 @@
           >curl -v http://domain.org/content/doc[1|2|3].html</span
         >)
       </li>
+      <li>the HTTP referer header is provided to the destination URL during a cross-origin navigation</li>
       <li>
         the browser's "view source" feature or a fetch response's body contains
         human-readable static document markup
@@ -96,9 +95,11 @@
       </li>
       <li>the original document markup is revealed in the web inspector</li>
     </ol>
+    <hr style="margin-top: 5em" />
+    <!-- h2>Original documents in iframe:</h2>
     <iframe style="width: 100%; height: 500px" src="/content/doc1.html">
     </iframe>
-    <hr style="margin-top: 5em" />
+    <hr style="margin-top: 5em" / -->
     <h2>"Protected" documents in iframe:</h2>
     <ol>
       <li>
@@ -118,6 +119,7 @@
           http://domain.org/protect/...</span
         >)
       </li>
+      <li>the HTTP referer header is not provided to the destination URL during a cross-origin navigation</li>
       <li>
         the browser's "view source" feature or a fetch response's body contains
         no human-readable static document markup (the DOM body is generated
@@ -140,7 +142,7 @@
         searching for the iframe in the DOM)
       </li>
     </ol>
-    <iframe style="width: 100%; height: 500px" src="/protect-root"> </iframe>
+    <iframe sandbox="allow-scripts allow-popups" referrerpolicy="same-origin" style="width: 100%; height: 500px" src="/protect-root"> </iframe>
     <hr />
     <div id="root"></div>
     <script type="module" src="./index.js"></script>
