@@ -19,6 +19,18 @@ const args = process.argv.slice(2);
 debug(chalk.green('process.argv.slice(2): '));
 debug('%o', args);
 
+const doObfuscateContentPaths = false;
+
+// may need encodeURIComponent() at caller site on returned value
+const obfuscateContentPath = (str) => {
+  return Buffer.from(str).toString('base64');
+};
+
+// may need decodeURIComponent() from caller on passed argument
+const deObfuscateContentPath = (str) => {
+  return Buffer.from(str, 'base64').toString('utf8');
+};
+
 const setResponseCORS = (res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
 
@@ -78,37 +90,99 @@ expressApp.get('/test', (req, res) => {
 
 const staticOptions = {
   etag: false,
+  setHeaders: (res, pathh, _stat) => {
+    debug('STATIC: ', res.url, pathh);
+  },
 };
 expressApp.use('/app', express.static('src/client/', staticOptions));
 expressApp.use('/content', express.static('content/', staticOptions));
-
-const headInject = `
-<script type="text/javascript" src="/content/inject.js"></script>
-`;
 
 const routerProtect = express.Router({ strict: false });
 routerProtect.get('/', (req, res, next) => {
   if (!req.params.asset) {
     req.params.asset = req._asset;
   }
+
+  debug('req.url', req.url); // path local to this router
+  debug('req.baseUrl', req.baseUrl); // path local to above this router
+  debug('req.originalUrl', req.originalUrl); // full path (req.baseUrl + req.url)
+
   debug('req.params', req.params);
   debug('req.query', req.query);
+  debug('req.headers', req.headers);
+
+  // req.params are already decodeURIComponent()
+  const asset = doObfuscateContentPaths
+    ? deObfuscateContentPath(req.params.asset)
+    : req.params.asset;
+  debug('asset', asset);
+
+  const isSecureHttp =
+    req.secure ||
+    req.protocol === 'https' ||
+    req.get('X-Forwarded-Proto') === 'https';
+  debug('isSecureHttp', isSecureHttp);
+
+  let headInject1 = '';
+  if (doObfuscateContentPaths) {
+    let asset_ = asset.split('/');
+    asset_ = asset_.slice(0, asset_.length - 1);
+    asset_.push(encodeURIComponent(req.params.asset));
+    const baseUrl = `http${isSecureHttp ? 's' : ''}://${
+      req.headers.host
+    }/${asset_.join('/')}`;
+    debug('baseUrl', baseUrl);
+    headInject1 = `
+    <base href="${baseUrl}" />
+    `;
+  }
+
+  if (!req.headers.referer) {
+    const str = `ASSET REFERER MISSING: ${asset}`;
+    debug(str);
+    return res.status(500).send(str);
+  }
+  const ref = req.headers.referer.replace(/^https?:\/\//, '');
+  if (
+    !ref.startsWith(`${req.headers.host}/app`) &&
+    !ref.startsWith(`${req.headers.host}/protect/`)
+  ) {
+    const str = `ASSET REFERER INCORRECT: ${asset} [${req.headers.host}] (${ref} ===> ${req.headers.referer})`;
+    debug(str);
+    return res.status(500).send(str);
+  }
 
   try {
-    if (!/\.html?$/.test(req.params.asset)) {
-      debug('skip', req.url);
+    if (!/\.html?$/.test(asset)) {
+      debug('skip non HTML', req.url);
       return next();
     }
-    const fileStr = fs
-      .readFileSync(path.join(process.cwd(), req.params.asset), {
-        encoding: 'utf8',
-      })
-      .replace(/<\/head>/, `${headInject}</head>`);
+    const originalFileStr = fs.readFileSync(path.join(process.cwd(), asset), {
+      encoding: 'utf8',
+    });
+    const bodyStart = originalFileStr.indexOf('<body');
+    const bodyEnd = originalFileStr.indexOf('</body>', bodyStart);
+    const bodyStr = originalFileStr.substr(bodyStart, bodyEnd - bodyStart + 7);
 
-    res.status(200).send(fileStr);
+    const headInject2 = `
+    <script type="text/javascript">
+    window.__BODY__ = '${Buffer.from(bodyStr).toString('base64')}';
+    </script>
+    <script type="text/javascript" src="/content/inject.js"></script>
+    `;
+    const responseStr = originalFileStr
+      .replace(
+        /<body[\s\S]*?<\/body>/gm,
+        '<body style="padding-top: 2em; padding-bottom: 2em; margin: 0; border: 0; box-sizing: border-box; font-size: 2em; font-family: sans; background-color: white; color: black;"></body>', // Loading... (delay just for demo)
+      )
+      .replace(/<head([\s\S]*?)>/gm, `<head$1>${headInject1}`)
+      .replace(/<\/head>/, `${headInject2}</head>`);
+
+    return res.status(200).type('text/html').send(responseStr);
   } catch (err) {
-    debug(err);
-    res.status(500).send(`ASSET ERROR: ${req.params.asset}`);
+    const str = `ASSET ERROR: ${asset} (${err})`;
+    debug(str);
+    return res.status(500).send(str);
   }
 });
 expressApp.param('asset', (req, _res, next, value, _name) => {
@@ -118,7 +192,18 @@ expressApp.param('asset', (req, _res, next, value, _name) => {
 expressApp.use('/protect/:asset(*)', routerProtect);
 expressApp.use('/protect/content', express.static('content/', staticOptions));
 
-expressApp.use((_req, res, _next) => {
+expressApp.use('/protect-root', (_req, res) => {
+  res.redirect(
+    301,
+    `/protect/${
+      doObfuscateContentPaths
+        ? encodeURIComponent(obfuscateContentPath('content/doc1.html'))
+        : 'content/doc1.html'
+    }?key1=value1&key2=value2#anchor`,
+  );
+});
+
+expressApp.use((_req, res) => {
   res.status(404).send('404');
 });
 

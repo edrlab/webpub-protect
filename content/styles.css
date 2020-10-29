@@ -22,3 +22,7 @@ ul {
 ul {
   font-weight: bolder;
 }
+#location {
+  font-family: monospace;
+  font-size: 0.6em;
+}

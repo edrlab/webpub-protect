@@ -33,13 +33,8 @@
       iframe {
         border: 4px solid magenta;
       }
-      textarea {
-        font-size: 1.2em;
+      .mono {
         font-family: monospace;
-        float: right;
-        width: 24em;
-        height: 4em;
-        border: 2px solid green;
       }
     </style>
   </head>
@@ -50,27 +45,53 @@
     <p>(links open new browser windows/tabs)</p>
     <ul>
       <li>
-        <a target="_BLANK" href="/content/doc1.html">Chapter #1</a>
+        <a target="_BLANK" href="/content/doc1.html">Chapter #1</a> (<span
+          class="mono"
+          >/content/doc1.html</span
+        >)
       </li>
       <li>
-        <a target="_BLANK" href="/content/doc2.html">Chapter #2</a>
+        <a target="_BLANK" href="/content/doc2.html">Chapter #2</a> (<span
+          class="mono"
+          >/content/doc2.html</span
+        >)
       </li>
       <li>
-        <a target="_BLANK" href="/content/doc3.html">Chapter #3</a>
+        <a target="_BLANK" href="/content/doc3.html">Chapter #3</a> (<span
+          class="mono"
+          >/content/doc3.html</span
+        >)
       </li>
     </ul>
     <hr style="margin-top: 5em" />
     <h2>Original documents in iframe:</h2>
-    <textarea placeholder="(try clipboard copy/paste here)"></textarea>
     <ol>
-      <li>text can be selected</li>
       <li>
-        selected text can be copied to clipboard (try in the text box
-        <span style="font-family: monospace">&rArr;&rArr;&rArr;</span>)
+        the document URLs are predictable (<span class="mono"
+          >/content/doc[1|2|3].html</span
+        >)
       </li>
-      <li>context menu can be displayed with mouse right-click</li>
+      <li>mouse hover or keyboard focus on hyperlinks reveals target URLs</li>
       <li>
-        web inspector / debugger can be opened via context menu ("inspect
+        the URLs can be fetched from external requests, without any restrictions
+        (e.g. web browser address bar, or
+        <span class="mono"
+          >curl -v http://domain.org/content/doc[1|2|3].html</span
+        >)
+      </li>
+      <li>
+        the browser's "view source" feature or a fetch response's body contains
+        human-readable static document markup
+      </li>
+      <li>text can be selected</li>
+      <li>the document text can be copied to clipboard</li>
+      <li>
+        the images, links, selected text (etc.) can be dragged and dropped onto
+        a consuming target
+      </li>
+      <li>the context menu can be displayed with mouse right-click</li>
+      <li>
+        the web inspector / debugger can be opened via context menu ("inspect
         element")
       </li>
       <li>the original document markup is revealed in the web inspector</li>
@@ -78,17 +99,39 @@
     <iframe style="width: 100%; height: 500px" src="/content/doc1.html">
     </iframe>
     <hr style="margin-top: 5em" />
-    <h2>Protected documents in iframe:</h2>
-    <textarea placeholder="(try clipboard copy/paste here)"></textarea>
+    <h2>"Protected" documents in iframe:</h2>
     <ol>
-      <li>text cannot be selected</li>
       <li>
-        text cannot be copied to clipboard (try in the text box
-        <span style="font-family: monospace">&rArr;&rArr;&rArr;</span>)
+        <strike
+          >the document URLs are not predictable (<span class="mono"
+            >/protect/[RANDOM]</span
+          >)</strike
+        >
       </li>
-      <li>context menu cannot be displayed with mouse right-click</li>
+      <li>mouse hover or keyboard focus on hyperlinks does not reveals target URLs</li>
       <li>
-        web inspector / debugger cannot be opened via context menu ("inspect
+        the URLs cannot be fetched from external requests without the required
+        contextual HTTP Referer header (however, note that this can easily be
+        worked out, e.g.:
+        <span class="mono"
+          >curl -v -H "Referer: http://domain.org/protect"
+          http://domain.org/protect/...</span
+        >)
+      </li>
+      <li>
+        the browser's "view source" feature or a fetch response's body contains
+        no human-readable static document markup (the DOM body is generated
+        dynamically by Javascript)
+      </li>
+      <li>the text cannot be selected</li>
+      <li>the document text cannot be copied to clipboard</li>
+      <li>
+        the images, links, selected text (etc.) cannot be dragged and dropped
+        onto a consuming target
+      </li>
+      <li>the context menu cannot be displayed with mouse right-click</li>
+      <li>
+        the web inspector / debugger cannot be opened via context menu ("inspect
         element")
       </li>
       <li>
@@ -97,8 +140,7 @@
         searching for the iframe in the DOM)
       </li>
     </ol>
-    <iframe style="width: 100%; height: 500px" src="/protect/content/doc1.html">
-    </iframe>
+    <iframe style="width: 100%; height: 500px" src="/protect-root"> </iframe>
     <hr />
     <div id="root"></div>
     <script type="module" src="./index.js"></script>
