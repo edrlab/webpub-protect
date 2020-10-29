@@ -192,7 +192,7 @@ routerProtect.get('/', (req, res, next) => {
 window.addEventListener('load', () => {
   setTimeout(() => {
     document.write(atob('${Buffer.from(originalFileStr).toString('base64')}'));
-  }, 1000);
+  }, 0); // 1000 === 1s for testing
 });
 </script>
 </head>
