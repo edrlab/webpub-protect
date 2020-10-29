@@ -31,6 +31,17 @@ const onAClick = (ev) => {
   newAEl.click();
 };
 
+const onContextmenu = (evt) => {
+  evt.preventDefault();
+};
+const feature8 = (activate) => {
+  if (activate) {
+    document.body.addEventListener('contextmenu', onContextmenu);
+  } else {
+    document.body.removeEventListener('contextmenu', onContextmenu);
+  }
+};
+
 const onDragstart = (evt) => {
   evt.preventDefault();
 };
@@ -129,6 +140,8 @@ Object.keys(inputs).forEach((key) => {
     feature6(val);
   } else if (key === 'checkBox_7') {
     feature7(val);
+  } else if (key === 'checkBox_8') {
+    feature8(val);
   }
 });
 
@@ -143,9 +156,7 @@ window.addEventListener('message', (evt) => {
     feature6(evt.data.checkBox_6);
   } else if (typeof evt.data.checkBox_7 !== 'undefined') {
     feature7(evt.data.checkBox_7);
+  } else if (typeof evt.data.checkBox_8 !== 'undefined') {
+    feature8(evt.data.checkBox_8);
   }
 });
-
-// document.body.addEventListener('contextmenu', (evt) => {
-//   evt.preventDefault();
-// });

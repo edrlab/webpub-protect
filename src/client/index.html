@@ -115,10 +115,9 @@
         the images, links, selected text (etc.) can be dragged and dropped onto
         a consuming target
       </li>
-      <li>the context menu can be displayed with mouse right-click</li>
       <li>
-        the web inspector / debugger can be opened via context menu ("inspect
-        element")
+        the context menu can be displayed with mouse right-click. the web
+        inspector / debugger can be opened via context menu ("inspect element")
       </li>
       <li>the original document markup is revealed in the web inspector</li>
     </ol>
@@ -205,12 +204,12 @@
         onto a consuming target
       </li>
       <li>
-        <input type="checkbox" id="checkBox_8" disabled />the context menu
-        cannot be displayed with mouse right-click
-      </li>
-      <li>
-        <input type="checkbox" id="checkBox_9" disabled />
-        the web inspector / debugger cannot be opened via context menu ("inspect
+        <input
+          type="checkbox"
+          id="checkBox_8"
+          onclick="window.onCheckBoxClick('checkBox_8')"
+        />the context menu cannot be displayed with mouse right-click, the web
+        inspector / debugger cannot be opened via context menu ("inspect
         element")
       </li>
       <li>
