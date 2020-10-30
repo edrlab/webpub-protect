@@ -1,5 +1,9 @@
 /* eslint-disable no-prototype-builtins */
 
+// NOTE: document mutations / DOM access, check for DOMContentLoaded or window.load
+// document.addEventListener('DOMContentLoaded', () => { });
+// window.addEventListener('load', () => { });
+
 console.log(`INJECT: ${document.readyState}`);
 
 window.addEventListener('load', () => {
@@ -19,17 +23,6 @@ document.getElementById('location').textContent = location.href;
 
 // const requestStorageAccess = await document.requestStorageAccess();
 // console.log('requestStorageAccess', requestStorageAccess);
-
-const onAClick = (ev) => {
-  ev.preventDefault();
-  const href = ev.currentTarget.getAttribute('data-href-resolved');
-  // this doesn't forward HTTP referer!
-  // location.href = href;
-  // location.replace(href);
-  const newAEl = document.createElement('a');
-  newAEl.setAttribute('href', href);
-  newAEl.click();
-};
 
 const onContextmenu = (evt) => {
   evt.preventDefault();
@@ -90,28 +83,41 @@ const feature5 = (activate) => {
   }
 };
 
+const onAElementClick = (ev) => {
+  ev.preventDefault();
+
+  const href = ev.currentTarget.getAttribute('data-href-resolved');
+
+  // doesn't forward HTTP referer :(
+  // location.href = href;
+  // location.replace(href);
+
+  // this forwards HTTP referer :)
+  const aElement = document.createElement('a');
+  aElement.setAttribute('href', href);
+  aElement.click();
+};
+
 const feature1 = (activate) => {
-  console.log('feature1', activate);
+  const aElements = document.querySelectorAll('a');
 
-  const aEls = document.querySelectorAll('a');
-
-  aEls.forEach((aEl) => {
-    const dataHref = aEl.getAttribute('data-href');
+  aElements.forEach((aElement) => {
+    const dataHref = aElement.getAttribute('data-href');
     if (!dataHref) {
-      aEl.setAttribute('data-href', aEl.getAttribute('href'));
-      aEl.setAttribute('data-href-resolved', aEl.href);
+      aElement.setAttribute('data-href', aElement.getAttribute('href'));
+      aElement.setAttribute('data-href-resolved', aElement.href);
     }
   });
 
   if (activate) {
-    aEls.forEach((aEl) => {
-      aEl.setAttribute('href', '/#');
-      aEl.addEventListener('click', onAClick);
+    aElements.forEach((aElement) => {
+      aElement.setAttribute('href', '/#');
+      aElement.addEventListener('click', onAElementClick);
     });
   } else {
-    aEls.forEach((aEl) => {
-      aEl.setAttribute('href', aEl.getAttribute('data-href'));
-      aEl.removeEventListener('click', onAClick);
+    aElements.forEach((aElement) => {
+      aElement.setAttribute('href', aElement.getAttribute('data-href'));
+      aElement.removeEventListener('click', onAElementClick);
     });
   }
 };

@@ -63,6 +63,21 @@
         padding-right: 1em;
         content: counter(item) '.';
       }
+      .technique {
+        font-size: 1em;
+        font-weight: bold;
+        color: blue;
+      }
+      textarea {
+        display: block;
+        font-size: 1em;
+        width: 100%;
+        height: 600px;
+        resize: none;
+        border: 1px solid silver;
+        border-left: 4px solid silver;
+        border-right: 4px solid silver;
+      }
     </style>
   </head>
   <body>
@@ -112,7 +127,7 @@
         the browser's "view source" feature or a fetch response's body contains
         human-readable static document markup
       </li>
-      <li>text can be selected</li>
+      <li>the text can be selected</li>
       <li>the document text can be copied to clipboard</li>
       <li>
         the images, links, selected text (etc.) can be dragged and dropped onto
@@ -130,98 +145,160 @@
     </iframe>
     <hr style="margin-top: 5em" / -->
     <h2>"Protected" documents in iframe:</h2>
-    <iframe
-      id="frame"
-      sandbox="allow-scripts allow-popups allow-same-origin"
-      referrerpolicy="same-origin"
-      style="width: 100%; height: 500px"
-    >
-    </iframe>
-    <ol>
-      <li>
-        <input type="checkbox" id="checkBox_0" disabled />
-        <strike
-          >the document URLs are not predictable (<span class="mono"
-            >/protect/[RANDOM]</span
-          >)</strike
-        >
-      </li>
-      <li>
-        <input
-          type="checkbox"
-          id="checkBox_1"
-          onclick="window.onCheckBoxClick('checkBox_1')"
-        />
-        mouse hover or keyboard focus on hyperlinks does not reveals target URLs
-      </li>
-      <li>
-        <input
-          type="checkbox"
-          id="checkBox_2"
-          onclick="window.onCheckBoxClick('checkBox_2', true)"
-        />
-        the URLs cannot be fetched from external requests without the required
-        contextual HTTP Referer header (however, note that this can easily be
-        worked out, e.g.:
-        <span class="mono"
-          >curl -v -H "Referer: http://domain.org/protect"
-          http://domain.org/protect/...</span
-        >)
-      </li>
-      <li>
-        <input type="checkbox" id="checkBox_3" disabled />
-        the HTTP referer header is not provided to the destination URL during a
-        cross-origin navigation (iframe sandboxing)
-      </li>
-      <li>
-        <input
-          type="checkbox"
-          id="checkBox_4"
-          onclick="window.onCheckBoxClick('checkBox_4', true)"
-        />
-        the browser's "view source" feature or a fetch response's body contains
-        no human-readable static document markup (the DOM body is generated
-        dynamically by Javascript)
-      </li>
-      <li>
-        <input
-          type="checkbox"
-          id="checkBox_5"
-          onclick="window.onCheckBoxClick('checkBox_5')"
-        />the text cannot be selected
-      </li>
-      <li>
-        <input
-          type="checkbox"
-          id="checkBox_6"
-          onclick="window.onCheckBoxClick('checkBox_6')"
-        />the document text cannot be copied to clipboard
-      </li>
-      <li>
-        <input
-          type="checkbox"
-          id="checkBox_7"
-          onclick="window.onCheckBoxClick('checkBox_7')"
-        />
-        the images, links, selected text (etc.) cannot be dragged and dropped
-        onto a consuming target
-      </li>
-      <li>
-        <input
-          type="checkbox"
-          id="checkBox_8"
-          onclick="window.onCheckBoxClick('checkBox_8')"
-        />the context menu cannot be displayed with mouse right-click, the web
-        inspector / debugger cannot be opened via context menu ("inspect
-        element")
-      </li>
-      <li>
-        <input type="checkbox" id="checkBox_10" disabled />
-        the original document markup can still be revealed in the web inspector
-        (using the top-level web browser menu to open the debugging tools, and
-        searching for the iframe in the DOM)
-      </li>
-    </ol>
+    <table style="border: 0">
+      <tr>
+        <td width="50%">
+          <ol>
+            <li>
+              <input type="checkbox" id="checkBox_0" disabled />
+              <strike
+                >the document URLs are not predictable (<span class="mono"
+                  >/protect/[RANDOM]</span
+                >)</strike
+              >
+            </li>
+            <li>
+              <input
+                type="checkbox"
+                id="checkBox_1"
+                onclick="window.onCheckBoxClick('checkBox_1')"
+              />mouse hover or keyboard focus on hyperlinks does not reveals
+              target URLs
+              <p>
+                <details>
+                  <summary class="technique">
+                    <u>Technique</u>
+                  </summary>
+                  <span>(JavaScript, client side)</span>
+                  <textarea readonly wrap="off">
+// NOTE: document mutations / DOM access,
+// check for DOMContentLoaded or window.load
+// document.addEventListener('DOMContentLoaded', () => { });
+// window.addEventListener('load', () => { });
+
+const onAElementClick = (ev) => {
+  ev.preventDefault();
+
+  const href = ev.currentTarget.getAttribute('data-href-resolved');
+
+  // doesn't forward HTTP referer :(
+  // location.href = href;
+  // location.replace(href);
+
+  // this forwards HTTP referer :)
+  const aElement = document.createElement('a');
+  aElement.setAttribute('href', href);
+  aElement.click();
+};
+
+const toggle = (activate) => {
+  const aElements = document.querySelectorAll('a');
+
+  aElements.forEach((aElement) => {
+    const dataHref = aElement.getAttribute('data-href');
+    if (!dataHref) {
+      aElement.setAttribute('data-href', aElement.getAttribute('href'));
+      aElement.setAttribute('data-href-resolved', aElement.href);
+    }
+  });
+
+  if (activate) {
+    aElements.forEach((aElement) => {
+      aElement.setAttribute('href', '/#');
+      aElement.addEventListener('click', onAElementClick);
+    });
+  } else {
+    aElements.forEach((aElement) => {
+      aElement.setAttribute('href', aElement.getAttribute('data-href'));
+      aElement.removeEventListener('click', onAElementClick);
+    });
+  }
+};
+</textarea
+                  >
+                </details>
+              </p>
+            </li>
+            <li>
+              <input
+                type="checkbox"
+                id="checkBox_2"
+                onclick="window.onCheckBoxClick('checkBox_2', true)"
+              />
+              the URLs cannot be fetched from external requests without the
+              required contextual HTTP Referer header (however, note that this
+              can easily be worked out, e.g.:
+              <span class="mono"
+                >curl -v -H "Referer: http://domain.org/protect"
+                http://domain.org/protect/...</span
+              >)
+            </li>
+            <li>
+              <input type="checkbox" id="checkBox_3" disabled />
+              the HTTP referer header is not provided to the destination URL
+              during a cross-origin navigation (iframe sandboxing)
+            </li>
+            <li>
+              <input
+                type="checkbox"
+                id="checkBox_4"
+                onclick="window.onCheckBoxClick('checkBox_4', true)"
+              />
+              the browser's "view source" feature or a fetch response's body
+              contains no human-readable static document markup (the DOM body is
+              generated dynamically by Javascript)
+            </li>
+            <li>
+              <input
+                type="checkbox"
+                id="checkBox_5"
+                onclick="window.onCheckBoxClick('checkBox_5')"
+              />the text cannot be selected
+            </li>
+            <li>
+              <input
+                type="checkbox"
+                id="checkBox_6"
+                onclick="window.onCheckBoxClick('checkBox_6')"
+              />the document text cannot be copied to clipboard
+            </li>
+            <li>
+              <input
+                type="checkbox"
+                id="checkBox_7"
+                onclick="window.onCheckBoxClick('checkBox_7')"
+              />
+              the images, links, selected text (etc.) cannot be dragged and
+              dropped onto a consuming target
+            </li>
+            <li>
+              <input
+                type="checkbox"
+                id="checkBox_8"
+                onclick="window.onCheckBoxClick('checkBox_8')"
+              />the context menu cannot be displayed with mouse right-click, the
+              web inspector / debugger cannot be opened via context menu
+              ("inspect element")
+            </li>
+            <li>
+              <input type="checkbox" id="checkBox_10" disabled />
+              the original document markup can still be revealed in the web
+              inspector (using the top-level web browser menu to open the
+              debugging tools, and searching for the iframe in the DOM)
+            </li>
+          </ol>
+        </td>
+        <td width="50%" valign="top">
+          <iframe
+            id="frame"
+            sandbox="allow-scripts allow-popups allow-same-origin"
+            referrerpolicy="same-origin"
+            style="width: 100%; height: 1000px"
+          >
+          </iframe>
+        </td>
+      </tr>
+    </table>
     <hr />
     <div id="root"></div>
     <script type="module" src="./index.js"></script>
