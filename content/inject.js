@@ -51,11 +51,12 @@ const onCopy = (evt) => {
   const selection = document.getSelection();
   if (selection) {
     const str = selection.toString();
+    console.log(str);
+    document.getSelection().empty();
     if (str) {
       alert(`Clipboard copy PREVENTED: "${str}"`);
     }
   }
-  document.getSelection().empty();
 };
 const feature6 = (activate) => {
   if (activate) {
@@ -68,12 +69,19 @@ const feature6 = (activate) => {
 const onSelectstart = (evt) => {
   evt.preventDefault();
 };
-const selectStyle =
-  '-webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;';
+const selectStyle = `
+-webkit-touch-callout: none;
+-webkit-user-select: none;
+-khtml-user-select: none;
+-moz-user-select: none;
+-ms-user-select: none;
+user-select: none;
+`;
 const feature5 = (activate) => {
   const bodyStyle = document.body.getAttribute('style') || '';
 
   document.getSelection().empty();
+
   if (activate) {
     window.addEventListener('selectstart', onSelectstart);
     document.body.setAttribute('style', bodyStyle + selectStyle);

@@ -25,10 +25,21 @@
         padding-right: 6em;
         font-size: 1.3em;
         line-height: 1.5em;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
       }
       h1,
       h2 {
         font-family: sans-serif;
+      }
+      h2 {
+        background-color: #ddd;
+        padding: 0.5em;
+        margin-top: 3em;
       }
       iframe {
         border: 4px solid magenta;
@@ -37,12 +48,36 @@
         font-family: monospace;
       }
       input[type='checkbox'] {
+        outline: none;
+        -webkit-appearance: none;
+        appearance: none;
+        border: 4px solid #900c3f;
+        border-radius: 8px;
+        display: inline-block;
+        position: relative;
+        padding: 0.2em;
+        font-size: 2em;
         vertical-align: middle;
-        width: 3em;
-        height: 3em;
+        margin-right: 0.2em;
+        background-color: #ffd4cb;
+        color: yellow;
+        cursor: pointer;
+      }
+      input[type='checkbox']:checked {
+        background-color: #27ae60;
+        border: 4px solid #196f3d;
+      }
+      input[type='checkbox']:checked::after {
+        content: '\2714';
+        font-size: 0.4em;
+        position: absolute;
+        top: -2px;
+        left: 2px;
+        color: white;
       }
       input[disabled] {
         visibility: hidden;
+        display: none;
       }
       ol {
         counter-reset: item;
@@ -53,8 +88,12 @@
         text-indent: -1em;
         counter-increment: item;
         line-height: 1.5em;
-        margin-bottom: 1em;
+        margin-bottom: 2em;
         font-size: 1.1em;
+        outline-style: solid;
+        outline-color: silver;
+        outline-width: 1px;
+        outline-offset: 0.5em;
       }
 
       ol > li::before {
@@ -63,114 +102,119 @@
         padding-right: 1em;
         content: counter(item) '.';
       }
-      .technique {
-        font-size: 1em;
-        font-weight: bold;
-        color: blue;
-      }
       textarea {
+        outline: none;
+        resize: none;
         display: block;
         font-size: 1em;
+        font-family: monospace;
         width: 100%;
         height: 600px;
-        resize: none;
         border: 1px solid silver;
         border-left: 4px solid silver;
         border-right: 4px solid silver;
+        padding: 1em;
+      }
+      details {
+        padding-left: 1em;
+      }
+      summary {
+        font-family: sans-serif;
+        font-size: 0.8em;
+        color: #1f618d;
+        outline: none;
+        cursor: pointer;
       }
     </style>
   </head>
   <body>
     <h1>webpub protect</h1>
-    <hr style="margin-top: 5em" />
-    <h2>Original documents:</h2>
-    <p>(links open new browser windows/tabs)</p>
-    <ul>
-      <li>
-        <a target="_BLANK" href="/content/doc1.html">Chapter #1</a> (<span
-          class="mono"
-          >/content/doc1.html</span
-        >)
-      </li>
-      <li>
-        <a target="_BLANK" href="/content/doc2.html">Chapter #2</a> (<span
-          class="mono"
-          >/content/doc2.html</span
-        >)
-      </li>
-      <li>
-        <a target="_BLANK" href="/content/doc3.html">Chapter #3</a> (<span
-          class="mono"
-          >/content/doc3.html</span
-        >)
-      </li>
-    </ul>
-    <ol>
-      <li>
-        the document URLs are predictable (<span class="mono"
-          >/content/doc[1|2|3].html</span
-        >)
-      </li>
-      <li>mouse hover or keyboard focus on hyperlinks reveals target URLs</li>
-      <li>
-        the URLs can be fetched from external requests, without any restrictions
-        (e.g. web browser address bar, or
-        <span class="mono"
-          >curl -v http://domain.org/content/doc[1|2|3].html</span
-        >)
-      </li>
-      <li>
-        the HTTP referer header is provided to the destination URL during a
-        cross-origin navigation (no iframe sandboxing))
-      </li>
-      <li>
-        the browser's "view source" feature or a fetch response's body contains
-        human-readable static document markup
-      </li>
-      <li>the text can be selected</li>
-      <li>the document text can be copied to clipboard</li>
-      <li>
-        the images, links, selected text (etc.) can be dragged and dropped onto
-        a consuming target
-      </li>
-      <li>
-        the context menu can be displayed with mouse right-click. the web
-        inspector / debugger can be opened via context menu ("inspect element")
-      </li>
-      <li>the original document markup is revealed in the web inspector</li>
-    </ol>
-    <hr style="margin-top: 5em" />
+    <h2>Unmodified publication documents</h2>
+    <div style="max-width: 800px">
+      <p>
+        The following 3 URLs point to a static host that serves the original web
+        content:
+      </p>
+      <ul>
+        <li>
+          <a target="_BLANK" href="/content/doc1.html">/content/doc1.html</a>
+        </li>
+        <li>
+          <a target="_BLANK" href="/content/doc2.html">/content/doc2.html</a>
+        </li>
+        <li>
+          <a target="_BLANK" href="/content/doc3.html">/content/doc3.html</a>
+        </li>
+      </ul>
+      <p style="font-family: sans-serif"><strong>List of problems</strong>:</p>
+      <ol>
+        <li>
+          the hyperlinks reveal target URLs when interacted with (mouse hover,
+          finger touch or keyboard focus)
+        </li>
+        <li>the text can be selected (mouse cursor or keyboard shortcut)</li>
+        <li>
+          the selected text can be copied to the clipboard (context menu or
+          keyboard shortcut)
+        </li>
+        <li>
+          the images, links, selected text (etc.) can be dragged (mouse or
+          finger touch)
+        </li>
+        <li>
+          the context menu can be displayed (typically: mouse right-click or
+          finger touch / long press). the web inspector / debugger can be opened
+          via the context menu (typically: "inspect element" menu item)
+        </li>
+        <li>
+          the browser's "view source" feature (or a fetch request's response
+          body) contains human-readable "static" document markup
+        </li>
+        <li>
+          the documents can be fetched by external HTTP requests, without any
+          restrictions (e.g. web browser address bar, or
+          <span class="mono">curl</span> / <span class="mono">wget</span> etc.)
+        </li>
+        <li>
+          the HTTP referer header is provided to the destination URL / hosting
+          server, during a cross-origin navigation
+        </li>
+        <li>
+          the original document markup, associated CSS stylesheets and
+          Javascript code are revealed in the web inspector (no mangling /
+          obfuscation)
+        </li>
+        <li>
+          the document URLs are predictable (<span class="mono"
+            >/content/doc[1|2|3].html</span
+          >)
+        </li>
+      </ol>
+    </div>
     <!-- h2>Original documents in iframe:</h2>
     <iframe style="width: 100%; height: 500px" src="/content/doc1.html">
     </iframe>
     <hr style="margin-top: 5em" / -->
-    <h2>"Protected" documents in iframe:</h2>
+    <h2>"Protected" publication documents</h2>
     <table style="border: 0">
-      <tr>
-        <td width="50%">
-          <ol>
-            <li>
-              <input type="checkbox" id="checkBox_0" disabled />
-              <strike
-                >the document URLs are not predictable (<span class="mono"
-                  >/protect/[RANDOM]</span
-                >)</strike
-              >
-            </li>
-            <li>
-              <input
-                type="checkbox"
-                id="checkBox_1"
-                onclick="window.onCheckBoxClick('checkBox_1')"
-              />mouse hover or keyboard focus on hyperlinks does not reveals
-              target URLs
-              <p>
-                <details>
-                  <summary class="technique">
-                    <u>Technique</u>
-                  </summary>
-                  <span>(JavaScript, client side)</span>
-                  <textarea readonly wrap="off">
+      <tbody>
+        <tr>
+          <td width="50%">
+            <ol>
+              <li>
+                <input
+                  type="checkbox"
+                  id="checkBox_1"
+                  onclick="window.onCheckBoxClick('checkBox_1')"
+                />the hyperlinks <strong>do not</strong> reveal target URLs when
+                interacted with (mouse hover, finger touch or keyboard focus)
+                <p>
+                  <details>
+                    <summary>
+                      <u>Technique</u>
+                    </summary>
+                    <span>(JavaScript, client side)</span>
+                    <textarea readonly wrap="off">
 // NOTE: document mutations / DOM access,
 // check for DOMContentLoaded or window.load
 // document.addEventListener('DOMContentLoaded', () => { });
@@ -215,89 +259,394 @@ const toggle = (activate) => {
   }
 };
 </textarea
-                  >
-                </details>
-              </p>
-            </li>
-            <li>
-              <input
-                type="checkbox"
-                id="checkBox_2"
-                onclick="window.onCheckBoxClick('checkBox_2', true)"
-              />
-              the URLs cannot be fetched from external requests without the
-              required contextual HTTP Referer header (however, note that this
-              can easily be worked out, e.g.:
-              <span class="mono"
-                >curl -v -H "Referer: http://domain.org/protect"
-                http://domain.org/protect/...</span
-              >)
-            </li>
-            <li>
-              <input type="checkbox" id="checkBox_3" disabled />
-              the HTTP referer header is not provided to the destination URL
-              during a cross-origin navigation (iframe sandboxing)
-            </li>
-            <li>
-              <input
-                type="checkbox"
-                id="checkBox_4"
-                onclick="window.onCheckBoxClick('checkBox_4', true)"
-              />
-              the browser's "view source" feature or a fetch response's body
-              contains no human-readable static document markup (the DOM body is
-              generated dynamically by Javascript)
-            </li>
-            <li>
-              <input
-                type="checkbox"
-                id="checkBox_5"
-                onclick="window.onCheckBoxClick('checkBox_5')"
-              />the text cannot be selected
-            </li>
-            <li>
-              <input
-                type="checkbox"
-                id="checkBox_6"
-                onclick="window.onCheckBoxClick('checkBox_6')"
-              />the document text cannot be copied to clipboard
-            </li>
-            <li>
-              <input
-                type="checkbox"
-                id="checkBox_7"
-                onclick="window.onCheckBoxClick('checkBox_7')"
-              />
-              the images, links, selected text (etc.) cannot be dragged and
-              dropped onto a consuming target
-            </li>
-            <li>
-              <input
-                type="checkbox"
-                id="checkBox_8"
-                onclick="window.onCheckBoxClick('checkBox_8')"
-              />the context menu cannot be displayed with mouse right-click, the
-              web inspector / debugger cannot be opened via context menu
-              ("inspect element")
-            </li>
-            <li>
-              <input type="checkbox" id="checkBox_10" disabled />
-              the original document markup can still be revealed in the web
-              inspector (using the top-level web browser menu to open the
-              debugging tools, and searching for the iframe in the DOM)
-            </li>
-          </ol>
-        </td>
-        <td width="50%" valign="top">
-          <iframe
-            id="frame"
-            sandbox="allow-scripts allow-popups allow-same-origin"
-            referrerpolicy="same-origin"
-            style="width: 100%; height: 1000px"
-          >
-          </iframe>
-        </td>
-      </tr>
+                    >
+                  </details>
+                </p>
+              </li>
+              <li>
+                <input
+                  type="checkbox"
+                  id="checkBox_5"
+                  onclick="window.onCheckBoxClick('checkBox_5')"
+                />the text <strong>cannot</strong> be selected (mouse cursor or
+                keyboard shortcut)
+                <p>
+                  <details>
+                    <summary>
+                      <u>Technique</u>
+                    </summary>
+                    <span>(JavaScript and CSS, client side)</span>
+                    <textarea readonly wrap="off">
+// NOTE: document mutations / DOM access,
+// check for DOMContentLoaded or window.load
+// document.addEventListener('DOMContentLoaded', () => { });
+// window.addEventListener('load', () => { });
+
+const onSelectstart = (evt) => {
+  evt.preventDefault();
+};
+const selectStyle = `
+-webkit-touch-callout: none;
+-webkit-user-select: none;
+-khtml-user-select: none;
+-moz-user-select: none;
+-ms-user-select: none;
+user-select: none;
+`;
+const toggle = (activate) => {
+  const bodyStyle = document.body.getAttribute('style') || '';
+
+  document.getSelection().empty();
+
+  if (activate) {
+    window.addEventListener('selectstart', onSelectstart);
+    document.body.setAttribute('style', bodyStyle + selectStyle);
+  } else {
+    window.removeEventListener('selectstart', onSelectstart);
+    document.body.setAttribute('style', bodyStyle.replace(selectStyle, ''));
+  }
+};
+</textarea
+                    >
+                  </details>
+                </p>
+              </li>
+              <li>
+                <input
+                  type="checkbox"
+                  id="checkBox_6"
+                  onclick="window.onCheckBoxClick('checkBox_6')"
+                />the selected text <strong>cannot</strong> be copied to the
+                clipboard (context menu or keyboard shortcut)
+                <p>
+                  <details>
+                    <summary>
+                      <u>Technique</u>
+                    </summary>
+                    <span>(JavaScript, client side)</span>
+                    <textarea readonly wrap="off">
+// NOTE: document mutations / DOM access,
+// check for DOMContentLoaded or window.load
+// document.addEventListener('DOMContentLoaded', () => { });
+// window.addEventListener('load', () => { });
+
+const onCopy = (evt) => {
+  evt.preventDefault();
+  const selection = document.getSelection();
+  if (selection) {
+    const str = selection.toString();
+    console.log(str);
+    document.getSelection().empty();
+    if (str) {
+      alert(`Clipboard copy PREVENTED: "${str}"`);
+    }
+  }
+};
+const toggle = (activate) => {
+  if (activate) {
+    document.body.addEventListener('copy', onCopy);
+  } else {
+    document.body.removeEventListener('copy', onCopy);
+  }
+};
+</textarea
+                    >
+                  </details>
+                </p>
+              </li>
+              <li>
+                <input
+                  type="checkbox"
+                  id="checkBox_7"
+                  onclick="window.onCheckBoxClick('checkBox_7')"
+                />
+                the images, links, selected text (etc.)
+                <strong>cannot</strong> be dragged (mouse or finger touch)
+                <p>
+                  <details>
+                    <summary>
+                      <u>Technique</u>
+                    </summary>
+                    <span>(JavaScript, client side)</span>
+                    <textarea readonly wrap="off">
+// NOTE: document mutations / DOM access,
+// check for DOMContentLoaded or window.load
+// document.addEventListener('DOMContentLoaded', () => { });
+// window.addEventListener('load', () => { });
+
+const onDragstart = (evt) => {
+  evt.preventDefault();
+};
+const toggle = (activate) => {
+  if (activate) {
+    document.body.addEventListener('dragstart', onDragstart);
+  } else {
+    document.body.removeEventListener('dragstart', onDragstart);
+  }
+};
+</textarea
+                    >
+                  </details>
+                </p>
+              </li>
+              <li>
+                <input
+                  type="checkbox"
+                  id="checkBox_8"
+                  onclick="window.onCheckBoxClick('checkBox_8')"
+                />
+                the context menu <strong>cannot</strong> be displayed
+                (typically: mouse right-click or finger touch / long press). the
+                web inspector / debugger c<strong>cannot</strong>an be opened
+                via the context menu (typically: "inspect element" menu item)
+                <p>
+                  <details>
+                    <summary>
+                      <u>Technique</u>
+                    </summary>
+                    <span>(Javascript, client side)</span>
+                    <textarea readonly wrap="off">
+// NOTE: document mutations / DOM access,
+// check for DOMContentLoaded or window.load
+// document.addEventListener('DOMContentLoaded', () => { });
+// window.addEventListener('load', () => { });
+
+const onContextmenu = (evt) => {
+  evt.preventDefault();
+};
+const toggle = (activate) => {
+  if (activate) {
+    document.body.addEventListener('contextmenu', onContextmenu);
+  } else {
+    document.body.removeEventListener('contextmenu', onContextmenu);
+  }
+};
+</textarea
+                    >
+                  </details>
+                </p>
+              </li>
+              <li>
+                <input
+                  type="checkbox"
+                  id="checkBox_4"
+                  onclick="window.onCheckBoxClick('checkBox_4', true)"
+                />
+                the browser's "view source" feature (or a fetch request's
+                response body) <strong>does not</strong> contain human-readable
+                "static" document markup
+                <p>
+                  <details>
+                    <summary>
+                      <u>Technique</u>
+                    </summary>
+                    <span
+                      >(server side, here: Javascript Node Express middleware,
+                      with Javascript execution on the client side)</span
+                    >
+                    <textarea readonly wrap="off">
+<pre>
+const express = require('express');
+
+const expressApp = express();
+
+const routerProtect = express.Router({ strict: false });
+routerProtect.get('/', (req, res, next) => {
+  if (!req.params.asset) {
+    req.params.asset = req._asset;
+  }
+
+  try {
+    if (!/\.html?$/.test(asset)) {
+      debug('skip non HTML', req.url);
+      return next();
+    }
+    const originalFileStr = fs
+      .readFileSync(path.join(process.cwd(), asset), {
+        encoding: 'utf8',
+      });
+
+    // this can be configured from outside to switch the protection feature on/off
+    const toggle = true;
+    const responseStr = toggle
+      ? `
+<!DOCTYPE html>
+<html>
+<head>
+<title>...</title>
+<meta charset="UTF-8" />
+<script type="text/javascript">
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.write(atob('${Buffer.from(originalFileStr).toString("base64")}'));
+  }, 0); // 1000 === 1s for testing
+});
+</script>
+</head>
+<body>
+</body>
+</html>
+    `
+      : originalFileStr;
+
+    return res.status(200).type('text/html').send(responseStr);
+  } catch (err) {
+    const str = `ASSET ERROR: ${asset} (${err})`;
+    debug(str);
+    return res.status(500).send(str);
+  }
+});
+expressApp.param('asset', (req, _res, next, value, _name) => {
+  req._asset = value;
+  next();
+});
+expressApp.use('/protect/:asset(*)', routerProtect);
+
+const staticOptions = {
+  etag: false,
+  setHeaders: (res, pathh, _stat) => {
+    debug('STATIC: ', res.url, pathh);
+  },
+};
+expressApp.use('/protect/content', express.static('content/', staticOptions));
+</pre></textarea
+                    >
+                  </details>
+                </p>
+              </li>
+              <li>
+                <input
+                  type="checkbox"
+                  id="checkBox_2"
+                  onclick="window.onCheckBoxClick('checkBox_2', true)"
+                />
+                the documents <strong>cannot</strong> be fetched by external
+                HTTP requests, without any restrictions (e.g. web browser
+                address bar, or <span class="mono">curl</span> /
+                <span class="mono">wget</span> etc.)
+                <p>
+                  <details>
+                    <summary>
+                      <u>Technique</u>
+                    </summary>
+                    <span
+                      >(server side, here: Javascript Node Express
+                      middleware)</span
+                    >
+                    <textarea readonly wrap="off">
+const express = require('express');
+
+const expressApp = express();
+
+const routerProtect = express.Router({ strict: false });
+routerProtect.get('/', (req, res, next) => {
+  if (!req.params.asset) {
+    req.params.asset = req._asset;
+  }
+  if (!req.headers.referer) {
+    const str = `ASSET REFERER MISSING: ${req.params.asset}`;
+    debug(str);
+    return res.status(500).send(str);
+  }
+  const ref = req.headers.referer.replace(/^https?:\/\//, '');
+  if (
+    !ref.startsWith(`${req.headers.host}/app`) &&
+    !ref.startsWith(`${req.headers.host}/protect/`)
+  ) {
+    const str = `ASSET REFERER INCORRECT: ${req.params.asset} [${req.headers.host}] (${ref} ===> ${req.headers.referer})`;
+    debug(str);
+    return res.status(500).send(str);
+  }
+
+  // else, continue as normal and resolve the HTTP response
+  ...
+});
+expressApp.param('asset', (req, _res, next, value, _name) => {
+  req._asset = value;
+  next();
+});
+expressApp.use('/protect/:asset(*)', routerProtect);
+</textarea
+                    >
+                  </details>
+                </p>
+              </li>
+              <li>
+                <input type="checkbox" id="checkBox_3" disabled />
+                the HTTP referer header <strong>is not</strong> provided to the
+                destination URL / hosting server, during a cross-origin
+                navigation
+                <p>
+                  <details>
+                    <summary>
+                      <u>Technique</u>
+                    </summary>
+                    <span>(client side)</span>
+                    <textarea readonly wrap="off">
+<iframe
+sandbox="allow-scripts"
+referrerpolicy="same-origin"
+src="..."
+></iframe>
+</textarea
+                    >
+                  </details>
+                </p>
+              </li>
+              <li>
+                <input type="checkbox" id="checkBox_10" disabled />
+                <strike>
+                  the original document markup, associated CSS stylesheets and
+                  Javascript code <strong>are not</strong> revealed in the web
+                  inspector (no mangling / obfuscation)</strike
+                >
+                <p>
+                  <details>
+                    <summary>
+                      <u>Technique</u>
+                    </summary>
+                    <span>(server side)</span>
+                    <textarea readonly wrap="off">
+TODO
+</textarea
+                    >
+                  </details>
+                </p>
+              </li>
+              <li>
+                <input type="checkbox" id="checkBox_0" disabled />
+                <strike>
+                  the document URLs <strong>are not</strong> predictable (<span
+                    class="mono"
+                    >/protect/[RANDOM]</span
+                  >)</strike
+                >
+                <p>
+                  <details>
+                    <summary>
+                      <u>Technique</u>
+                    </summary>
+                    <span>(server side)</span>
+                    <textarea readonly wrap="off">
+TODO
+        </textarea
+                    >
+                  </details>
+                </p>
+              </li>
+            </ol>
+          </td>
+          <td width="50%" valign="top" style="padding-left: 1em">
+            <iframe
+              id="frame"
+              sandbox="allow-scripts allow-popups allow-modals allow-same-origin"
+              referrerpolicy="same-origin"
+              style="width: 100%; height: 1000px"
+            >
+            </iframe>
+          </td>
+        </tr>
+      </tbody>
     </table>
     <hr />
     <div id="root"></div>
