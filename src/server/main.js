@@ -114,12 +114,12 @@ routerProtect.get('/', (req, res, next) => {
   debug('req.headers', req.headers);
 
   let checkBoxes = {};
-  const data = req.query.checkBoxes || req.cookies.checkBoxes;
-  if (data) {
-    checkBoxes = JSON.parse(data);
+  const checkBoxesData = req.query.checkBoxes || req.cookies.checkBoxes;
+  if (checkBoxesData) {
+    checkBoxes = JSON.parse(checkBoxesData);
     debug(checkBoxes);
 
-    res.cookie('checkBoxes', data, {
+    res.cookie('checkBoxes', checkBoxesData, {
       signed: false,
     });
   }
@@ -150,9 +150,9 @@ routerProtect.get('/', (req, res, next) => {
   //   `;
   // }
 
-  if (checkBoxes.checkBox_2) {
+  if (checkBoxes.checkBox_2 || !checkBoxesData) {
     if (!req.headers.referer) {
-      const str = `ASSET REFERER MISSING: ${asset}`;
+      const str = `ASSET REFERER MISSING: ${asset} ${req.headers.referer}`;
       debug(str);
       return res.status(500).send(str);
     }
@@ -181,8 +181,9 @@ routerProtect.get('/', (req, res, next) => {
         '<script type="text/javascript" src="/content/inject.js"></script></body>',
       );
 
-    const responseStr = checkBoxes.checkBox_4
-      ? `
+    const responseStr =
+      checkBoxes.checkBox_4 || !checkBoxesData
+        ? `
 <!DOCTYPE html>
 <html>
 <head>
@@ -200,7 +201,7 @@ window.addEventListener('load', () => {
 </body>
 </html>
     `
-      : originalFileStr;
+        : originalFileStr;
 
     //     const bodyStart = originalFileStr.indexOf('<body');
     //     const bodyEnd = originalFileStr.indexOf('</body>', bodyStart);
@@ -258,7 +259,9 @@ expressApp.use('/protect-root', (req, res) => {
       doObfuscateContentPaths
         ? encodeURIComponent(obfuscateContentPath('content/doc1.html'))
         : 'content/doc1.html'
-    }?checkBoxes=${req.query.checkBoxes}&key1=value1&key2=value2#anchor`,
+    }?checkBoxes=${
+      req.query.checkBoxes || JSON.stringify({})
+    }&key1=value1&key2=value2#anchor`,
   );
 });
 
