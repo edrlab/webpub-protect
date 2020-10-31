@@ -5,6 +5,8 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const cookieParser = require('cookie-parser');
+const uuid = require('uuid');
+
 // const http = require('http');
 
 const debug = debug_('webpub-protect');
@@ -18,6 +20,22 @@ debug(`${chalk.green('__filename:')} ${__filename}`);
 const args = process.argv.slice(2);
 debug(chalk.green('process.argv.slice(2): '));
 debug('%o', args);
+
+const encodeURIComponent_RFC3986 = (str) => {
+  return encodeURIComponent(str).replace(/[!'()*]/g, (c) => {
+    return '%' + c.charCodeAt(0).toString(16);
+  });
+};
+
+const AES_BLOCK_SIZE = 16;
+const salt = crypto.randomBytes(16).toString('hex');
+const key_buffer = crypto.pbkdf2Sync(uuid.v4(), salt, 1000, 32, 'sha256');
+const key_buffer_hex = key_buffer.toString('hex');
+
+const iv_buffer = Buffer.from(uuid.v4()).slice(0, AES_BLOCK_SIZE);
+const iv_buffer_hex = iv_buffer.toString('hex');
+
+const access_token = uuid.v4();
 
 const doObfuscateContentPaths = false;
 
@@ -49,7 +67,7 @@ const setResponseCORS = (res) => {
 
 const expressApp = express();
 
-expressApp.use(cookieParser());
+expressApp.use(cookieParser('webpub-protect'));
 
 // TODO: HTTP header `X-Robots-Tag` === `none`?
 expressApp.get('/robots.txt', (_req, res) => {
@@ -113,14 +131,84 @@ routerProtect.get('/', (req, res, next) => {
   debug('req.query', req.query);
   debug('req.headers', req.headers);
 
+  const isSecureHttp =
+    req.secure ||
+    req.protocol === 'https' ||
+    req.get('X-Forwarded-Proto') === 'https';
+  debug('isSecureHttp', isSecureHttp);
+
   let checkBoxes = {};
-  const checkBoxesData = req.query.checkBoxes || req.cookies.checkBoxes;
+  const checkBoxesData =
+    req.query.checkBoxes ||
+    (req.cookies && req.cookies.checkBoxes) ||
+    (req.signedCookies && req.signedCookies.checkBoxes);
   if (checkBoxesData) {
     checkBoxes = JSON.parse(checkBoxesData);
     debug(checkBoxes);
 
     res.cookie('checkBoxes', checkBoxesData, {
-      signed: false,
+      path: '/protect',
+      maxAge: 60 * 60 * 24 * 365, // one year
+      signed: true,
+      sameSite: 'strict',
+      secure: false, // isSecureHttp
+    });
+  }
+
+  // ALWAYS generate access_token cookie
+  // eslint-disable-next-line no-constant-condition
+  if (true || checkBoxes.checkBox_9 || !checkBoxesData) {
+    const strToEncrypt = access_token;
+
+    const encrypteds = [];
+    // encrypteds.push(iv_buffer);
+    const encryptStream = crypto.createCipheriv(
+      'aes-256-cbc',
+      key_buffer,
+      iv_buffer,
+    );
+    encryptStream.setAutoPadding(true);
+    const buff1 = encryptStream.update(strToEncrypt, 'utf8'); // jsonBuff
+    if (buff1) {
+      encrypteds.push(buff1);
+    }
+    const buff2 = encryptStream.final();
+    if (buff2) {
+      encrypteds.push(buff2);
+    }
+    const encrypted = Buffer.concat(encrypteds);
+    const encryptedHex = Buffer.from(encrypted).toString('hex');
+    const encryptedBase64 = Buffer.from(encryptedHex).toString('base64');
+
+    // const encryptedBufferB64 = Buffer.from(base64Payload, 'base64');
+    // const encryptedBuffer = Buffer.from(encryptedBufferB64, 'hex'); // .toString("utf8");
+    // const decrypteds = [];
+    // const decryptStream = crypto.createDecipheriv(
+    //   'aes-256-cbc',
+    //   key_buffer,
+    //   iv_buffer,
+    // );
+    // decryptStream.setAutoPadding(false);
+    // const buff1 = decryptStream.update(encryptedBuffer);
+    // if (buff1) {
+    //   decrypteds.push(buff1);
+    // }
+    // const buff2 = decryptStream.final();
+    // if (buff2) {
+    //   decrypteds.push(buff2);
+    // }
+    // const decrypted = Buffer.concat(decrypteds);
+    // const nPaddingBytes = decrypted[decrypted.length - 1];
+    // const size = encryptedBuffer.length - nPaddingBytes;
+    // const decryptedStr = decrypted.slice(0, size).toString('utf8');
+    // const decryptedJson = JSON.parse(decryptedStr);
+
+    res.cookie('access_token', encryptedBase64, {
+      path: '/protect',
+      maxAge: 60 * 60 * 24 * 365, // one year
+      signed: true,
+      sameSite: 'strict',
+      secure: false, // isSecureHttp
     });
   }
 
@@ -129,12 +217,6 @@ routerProtect.get('/', (req, res, next) => {
     ? deObfuscateContentPath(req.params.asset)
     : req.params.asset;
   debug('asset', asset);
-
-  const isSecureHttp =
-    req.secure ||
-    req.protocol === 'https' ||
-    req.get('X-Forwarded-Proto') === 'https';
-  debug('isSecureHttp', isSecureHttp);
 
   // let headInject1 = '';
   // if (doObfuscateContentPaths) {
@@ -179,11 +261,226 @@ routerProtect.get('/', (req, res, next) => {
       .replace(
         /<\/body[\s\S]*?>/gm,
         '<script type="text/javascript" src="/content/inject.js"></script></body>',
+      )
+      .replace(
+        /<\/head[\s\S]*?>/gm,
+        '<style id="__content-style">.__class_title{background-color:#ffffff;color:#000000;border:1px solid silver;display:inline-block;vertical-align:top;}body{visibility:hidden !important;.__class_subject{background-color:#ffffff;color:#000000;border:1px solid silver;vertical-align:top;}}</style></head>',
       );
 
-    const responseStr =
-      checkBoxes.checkBox_4 || !checkBoxesData
-        ? `
+    const hideEncrypt = checkBoxes.checkBox_9;
+    const hide = checkBoxes.checkBox_4 || hideEncrypt || !checkBoxesData;
+    let responseStr = originalFileStr;
+    if (hideEncrypt) {
+      const strToEncrypt = originalFileStr;
+
+      const iv_buffer_ = Buffer.from(access_token).slice(0, AES_BLOCK_SIZE);
+
+      const encrypteds = [];
+      // encrypteds.push(iv_buffer_);
+      const encryptStream = crypto.createCipheriv(
+        'aes-256-cbc',
+        key_buffer,
+        iv_buffer_,
+      );
+      encryptStream.setAutoPadding(true);
+      const buff1 = encryptStream.update(strToEncrypt, 'utf8'); // jsonBuff
+      if (buff1) {
+        encrypteds.push(buff1);
+      }
+      const buff2 = encryptStream.final();
+      if (buff2) {
+        encrypteds.push(buff2);
+      }
+      const encrypted = Buffer.concat(encrypteds);
+      const encryptedHex = Buffer.from(encrypted).toString('hex');
+      const encryptedBase64 = Buffer.from(encryptedHex).toString('base64');
+
+      responseStr = `
+<!DOCTYPE html>
+<html>
+<head>
+<title>...</title>
+<meta charset="UTF-8" />
+<script type="text/javascript">
+
+function encodeURIComponent_RFC3986(str) {
+  return encodeURIComponent(str).replace(/[!'()*]/g, (c) => {
+      return "%" + c.charCodeAt(0).toString(16);
+  });
+}
+
+function hexStrToArrayBuffer(hexStr) {
+  return new Uint8Array(
+      hexStr
+      .match(/.{1,2}/g)
+      .map((byte) => {
+          return parseInt(byte, 16);
+      })
+  );
+}
+
+window.addEventListener('load', () => {
+  setTimeout(() => {
+
+    window.crypto.subtle.importKey(
+      "raw",
+      hexStrToArrayBuffer("${key_buffer_hex}"),
+      { "name": "AES-CBC" },
+      false,
+      ["encrypt", "decrypt"]
+    ).then((key) => { // CryptoKey
+    
+        const iv = hexStrToArrayBuffer("${iv_buffer_hex}");
+
+        console.log(document.cookie);
+
+        const allNumbers = str => /^\\d+$/.test(str);
+    
+        // const cookieObj0 =
+        // document.cookie
+        // .split(/\\s*;\\s*/)
+        // .map(keyValuePair => keyValuePair.split(/\\s*=\\s*/))
+        // .reduce((obj, keyValueTuple) => {
+        //   let val = decodeURIComponent(keyValueTuple[1]);
+        //   if (/^[sj]:/.test(val)) {
+        //     val = val.substr(2, val.lastIndexOf('.') - 2);
+        //   }
+        //   obj[decodeURIComponent(keyValueTuple[0])] = val;
+        //   return obj;
+        // }, {});
+        // console.log(cookieObj0);
+    
+        // const cookieObj1 =
+        // Object.fromEntries(
+        //   document.cookie
+        //   .split(/\\s*;\\s*/)
+        //   .map(keyValuePair => {
+        //     const [ key, ...v ] = keyValuePair.split(/\\s*=\\s*/).map(decodeURIComponent);
+        //     return [ key, v.join('=') ];
+        //     // assumes value can contain space char (?!)
+        //     // ... but encodeURIComponent('=') === "%3D" so this is unnecessary.
+        //   }
+        // ));
+        // console.log(cookieObj1);
+    
+        const cookieObj2 =
+        document.cookie
+        .split(/\\s*;\\s*/)
+        .reduce((obj, keyValuePair) => {
+          let [key, val] = keyValuePair.split(/\\s*=\\s*/);
+          key = decodeURIComponent(key);
+          val = decodeURIComponent(val);
+          if (/^[sj]:/.test(val)) {
+            val = val.substr(2, val.lastIndexOf('.') - 2);
+          }
+          try {
+            obj[key] = allNumbers(val) ? val : JSON.parse(val);
+          } catch (e) {
+            obj[key] = val;
+          }
+          return obj;
+        }, {});
+        console.log(cookieObj2);
+    
+        const base64ToDecrypt = cookieObj2.access_token;
+        const hexToDecrypt = window.atob(base64ToDecrypt);
+        const buffToDecrypt = hexStrToArrayBuffer(hexToDecrypt);
+    
+        window.crypto.subtle.decrypt(
+          {
+              name: "AES-CBC",
+              iv
+          },
+          key,
+          buffToDecrypt
+        ).then((decrypted) => { // ArrayBuffer
+          // const arg = String.fromCharCode.apply(null, new Uint8Array(decrypted));
+          const arg = new Uint8Array(decrypted).reduce((data, byte) => {
+              return data + String.fromCharCode(byte);
+          }, '');
+          console.log(arg); // access_token
+
+          window.crypto.subtle.importKey(
+            "raw",
+            hexStrToArrayBuffer("${key_buffer_hex}"),
+            { "name": "AES-CBC" },
+            false,
+            ["encrypt", "decrypt"]
+          ).then((key) => { // CryptoKey
+              const access_token = arg;
+              const textEncoder = new TextEncoder("utf-8");
+              const iv = textEncoder.encode(access_token).slice(0, 16); // Uint8Array
+
+              const base64ToDecrypt = '${encryptedBase64}';
+              const hexToDecrypt = window.atob(base64ToDecrypt);
+              const buffToDecrypt = hexStrToArrayBuffer(hexToDecrypt);
+          
+              window.crypto.subtle.decrypt(
+                {
+                    name: "AES-CBC",
+                    iv
+                },
+                key,
+                buffToDecrypt
+              ).then((decrypted) => { // ArrayBuffer
+                // const arg = String.fromCharCode.apply(null, new Uint8Array(decrypted));
+                const arg = new Uint8Array(decrypted).reduce((data, byte) => {
+                    return data + String.fromCharCode(byte);
+                }, '');
+                // console.log(arg);
+      
+                document.write(arg);
+              }).catch((err) => {
+                  console.log(err);
+              });
+        
+          }).catch((err) => {
+              console.log(err);
+          });
+
+        }).catch((err) => {
+            console.log(err);
+        });
+    
+        /*
+        const strToEncrypt = '';
+        const textEncoder = new TextEncoder("utf-8");
+        const strToEncryptEncoded = textEncoder.encode(strToEncrypt); // Uint8Array
+        
+        window.crypto.subtle.encrypt(
+            {
+                name: "AES-CBC",
+                iv
+            },
+            key,
+            strToEncryptEncoded
+        ).then((encrypted) => { // ArrayBuffer
+            // const arg = String.fromCharCode.apply(null, new Uint8Array(encrypted));
+            const arg = new Uint8Array(encrypted).reduce((data, byte) => {
+                return data + String.fromCharCode(byte);
+            }, '');
+            const encryptedB64 = window.btoa(arg);
+    
+            // const url = location.origin + encodeURIComponent_RFC3986(encryptedB64);
+            // location.href = url;
+        }).catch((err) => {
+            console.log(err);
+        });
+        */
+    }).catch((err) => {
+        console.log(err);
+    });
+
+  }, 0); // 1000 === 1s for testing
+});
+</script>
+</head>
+<body>
+</body>
+</html>
+`;
+    } else if (hide) {
+      responseStr = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -200,8 +497,8 @@ window.addEventListener('load', () => {
 <body>
 </body>
 </html>
-    `
-        : originalFileStr;
+`;
+    }
 
     //     const bodyStart = originalFileStr.indexOf('<body');
     //     const bodyEnd = originalFileStr.indexOf('</body>', bodyStart);
@@ -257,7 +554,7 @@ expressApp.use('/protect-root', (req, res) => {
     301,
     `/protect/${
       doObfuscateContentPaths
-        ? encodeURIComponent(obfuscateContentPath('content/doc1.html'))
+        ? encodeURIComponent_RFC3986(obfuscateContentPath('content/doc1.html'))
         : 'content/doc1.html'
     }?checkBoxes=${
       req.query.checkBoxes || JSON.stringify({})

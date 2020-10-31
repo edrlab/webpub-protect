@@ -405,8 +405,8 @@ const toggle = (activate) => {
                 />
                 the context menu <strong>cannot</strong> be displayed
                 (typically: mouse right-click or finger touch / long press). the
-                web inspector / debugger c<strong>cannot</strong>an be opened
-                via the context menu (typically: "inspect element" menu item)
+                web inspector / debugger <strong>cannot</strong> be opened via
+                the context menu (typically: "inspect element" menu item)
                 <p>
                   <details>
                     <summary>
@@ -525,12 +525,38 @@ expressApp.use('/protect/content', express.static('content/', staticOptions));
               <li>
                 <input
                   type="checkbox"
+                  id="checkBox_9"
+                  onclick="window.onCheckBoxClick('checkBox_9', true)"
+                />
+                the browser's "view source" feature (or a fetch request's
+                response body) <strong>does not</strong> contain human-readable
+                "static" document markup, AND contains encrypted content.
+                <p>
+                  <details>
+                    <summary>
+                      <u>Technique</u>
+                    </summary>
+                    <span
+                      >(server side, here: Javascript Node Express middleware,
+                      with Javascript execution on the client side)</span
+                    >
+                    <textarea readonly wrap="off">
+<pre>
+Same as above, but with additional private key and crypto encoding (cypher text instead of base-64 plain text)
+</pre></textarea
+                    >
+                  </details>
+                </p>
+              </li>
+              <li>
+                <input
+                  type="checkbox"
                   id="checkBox_2"
                   onclick="window.onCheckBoxClick('checkBox_2', true)"
                 />
                 the documents <strong>cannot</strong> be fetched by external
-                HTTP requests, without any restrictions (e.g. web browser
-                address bar, or <span class="mono">curl</span> /
+                HTTP requests, without an appropriate HTTP referer header (e.g.
+                web browser address bar, or <span class="mono">curl</span> /
                 <span class="mono">wget</span> etc.)
                 <p>
                   <details>

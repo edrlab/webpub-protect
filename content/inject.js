@@ -6,6 +6,40 @@
 
 console.log(`INJECT: ${document.readyState}`);
 
+const allNumbers = (str) => /^\\d+$/.test(str);
+console.log(document.cookie);
+const cookieObj2 = document.cookie
+  .split(/\s*;\s*/)
+  .reduce((obj, keyValuePair) => {
+    let [key, val] = keyValuePair.split(/\s*=\s*/);
+    key = decodeURIComponent(key);
+    val = decodeURIComponent(val);
+    if (/^[sj]:/.test(val)) {
+      val = val.substr(2, val.lastIndexOf('.') - 2);
+    }
+    try {
+      obj[key] = allNumbers(val) ? val : JSON.parse(val);
+    } catch (_err) {
+      obj[key] = val;
+    }
+    return obj;
+  }, {});
+console.log(cookieObj2);
+const allow = window.top !== window && cookieObj2.access_token;
+if (allow) {
+  // const id = '__content-style'
+  //   .split('')
+  //   .reduce((str, c) => str + `%${parseInt(c.charCodeAt(0)).toString(16)}`, '');
+  // console.log(id);
+  const el = document.getElementById(
+    decodeURI('%5f%5f%63%6f%6e%74%65%6e%74%2d%73%74%79%6c%65'), // id
+  );
+  el.parentNode.removeChild(el);
+} else {
+  document.body.style.display = 'none';
+  document.title = 'about:blank';
+}
+
 window.addEventListener('load', () => {
   console.log(`INJECT window load: ${document.readyState}`);
 });
