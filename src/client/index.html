@@ -540,10 +540,8 @@ expressApp.use('/protect/content', express.static('content/', staticOptions));
                       >(server side, here: Javascript Node Express middleware,
                       with Javascript execution on the client side)</span
                     >
-                    <textarea readonly wrap="off">
-<pre>
-Same as above, but with additional private key and crypto encoding (cypher text instead of base-64 plain text)
-</pre></textarea
+                    <textarea readonly wrap="on">
+Same as above, but with additional crypto private key (passed via server-set cookie), to produce cypher text instead of base-64 plain text. In other words, unlike the base64 decoding which can be performed simply by rendering the webpage (even in file://), this requires the domain-speific cookie to be present.</textarea
                     >
                   </details>
                 </p>
@@ -607,9 +605,12 @@ expressApp.use('/protect/:asset(*)', routerProtect);
               </li>
               <li>
                 <input type="checkbox" id="checkBox_3" disabled />
-                the HTTP referer header <strong>is not</strong> provided to the
-                destination URL / hosting server, during a cross-origin
-                navigation
+                with a sandboxed iframe, the HTTP referer header
+                <strong>is not</strong> provided to the destination URL /
+                hosting server, during a cross-origin navigation. Additionally,
+                the HTML documents are hidden by default (CSS techniques), and
+                only displayed when certain conditions are met (see details
+                below)
                 <p>
                   <details>
                     <summary>
@@ -622,6 +623,32 @@ sandbox="allow-scripts"
 referrerpolicy="same-origin"
 src="..."
 ></iframe>
+
+// ... additionally, CSS styles "hide" the HTML body by default,
+// and Javascript makes it visible only when an
+// "access_token" cookie is detected (as set in the response headers by the HTTP server),
+// and when the host window is inside an iframe (i.e. not top-level).
+
+<!-- the CSS line is intentionally unnecessarily long, to introduce noise / obfuscation -->
+<style id="__content-style">/* stylelint-disable-line */.__class_title{background-color:#ffffff;color:#000000;border:1px solid silver;display:inline-block;vertical-align:top;}body{visibility:hidden !important;.__class_subject{background-color:#ffffff;color:#000000;border:1px solid silver;vertical-align:top;}}</style></head>
+
+const allow = window.top !== window && document.cookie.access_token;
+if (allow) {
+  // percent-encoding for additional obfuscation:
+  // const id = '__content-style'
+  //   .split('')
+  //   .reduce((str, c) => str + `%${parseInt(c.charCodeAt(0)).toString(16)}`, '');
+  // console.log(id);
+
+  const el = document.getElementById(
+    decodeURI('%5f%5f%63%6f%6e%74%65%6e%74%2d%73%74%79%6c%65'), // id
+  );
+  el.parentNode.removeChild(el);
+} else {
+  // ensures total blank
+  document.body.style.display = 'none';
+  document.title = 'about:blank';
+}
 </textarea
                     >
                   </details>
