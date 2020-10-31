@@ -254,13 +254,26 @@ routerProtect.get('/', (req, res, next) => {
       debug('skip non HTML', req.url);
       return next();
     }
+
+    const jsrc = fs.readFileSync(
+      path.join(process.cwd(), 'src', 'client', 'inject.js'),
+      {
+        encoding: 'utf8',
+      },
+    );
+
     const originalFileStr = fs
       .readFileSync(path.join(process.cwd(), asset), {
         encoding: 'utf8',
       })
       .replace(
         /<\/body[\s\S]*?>/gm,
-        '<script type="text/javascript" src="/content/inject.js"></script></body>',
+        `
+<script type="text/javascript">
+${jsrc}
+</script>
+</body>
+`,
       )
       .replace(
         /<\/head[\s\S]*?>/gm,
@@ -294,7 +307,16 @@ routerProtect.get('/', (req, res, next) => {
       const encrypted = Buffer.concat(encrypteds);
       const encryptedHex = Buffer.from(encrypted).toString('hex');
       const encryptedBase64 = Buffer.from(encryptedHex).toString('base64');
-
+      const jsrc = fs
+        .readFileSync(
+          path.join(process.cwd(), 'src', 'client', 'bootstrap.js'),
+          {
+            encoding: 'utf8',
+          },
+        )
+        .replace(/__encryptedBase64__/g, encryptedBase64)
+        .replace(/__key_buffer_hex__/g, key_buffer_hex)
+        .replace(/__iv_buffer_hex__/g, iv_buffer_hex);
       responseStr = `
 <!DOCTYPE html>
 <html>
@@ -302,177 +324,7 @@ routerProtect.get('/', (req, res, next) => {
 <title>...</title>
 <meta charset="UTF-8" />
 <script type="text/javascript">
-
-function encodeURIComponent_RFC3986(str) {
-  return encodeURIComponent(str).replace(/[!'()*]/g, (c) => {
-      return "%" + c.charCodeAt(0).toString(16);
-  });
-}
-
-function hexStrToArrayBuffer(hexStr) {
-  return new Uint8Array(
-      hexStr
-      .match(/.{1,2}/g)
-      .map((byte) => {
-          return parseInt(byte, 16);
-      })
-  );
-}
-
-window.addEventListener('load', () => {
-  setTimeout(() => {
-
-    window.crypto.subtle.importKey(
-      "raw",
-      hexStrToArrayBuffer("${key_buffer_hex}"),
-      { "name": "AES-CBC" },
-      false,
-      ["encrypt", "decrypt"]
-    ).then((key) => { // CryptoKey
-    
-        const iv = hexStrToArrayBuffer("${iv_buffer_hex}");
-
-        console.log(document.cookie);
-
-        const allNumbers = str => /^\\d+$/.test(str);
-    
-        // const cookieObj0 =
-        // document.cookie
-        // .split(/\\s*;\\s*/)
-        // .map(keyValuePair => keyValuePair.split(/\\s*=\\s*/))
-        // .reduce((obj, keyValueTuple) => {
-        //   let val = decodeURIComponent(keyValueTuple[1]);
-        //   if (/^[sj]:/.test(val)) {
-        //     val = val.substr(2, val.lastIndexOf('.') - 2);
-        //   }
-        //   obj[decodeURIComponent(keyValueTuple[0])] = val;
-        //   return obj;
-        // }, {});
-        // console.log(cookieObj0);
-    
-        // const cookieObj1 =
-        // Object.fromEntries(
-        //   document.cookie
-        //   .split(/\\s*;\\s*/)
-        //   .map(keyValuePair => {
-        //     const [ key, ...v ] = keyValuePair.split(/\\s*=\\s*/).map(decodeURIComponent);
-        //     return [ key, v.join('=') ];
-        //     // assumes value can contain space char (?!)
-        //     // ... but encodeURIComponent('=') === "%3D" so this is unnecessary.
-        //   }
-        // ));
-        // console.log(cookieObj1);
-    
-        const cookieObj2 =
-        document.cookie
-        .split(/\\s*;\\s*/)
-        .reduce((obj, keyValuePair) => {
-          let [key, val] = keyValuePair.split(/\\s*=\\s*/);
-          key = decodeURIComponent(key);
-          val = decodeURIComponent(val);
-          if (/^[sj]:/.test(val)) {
-            val = val.substr(2, val.lastIndexOf('.') - 2);
-          }
-          try {
-            obj[key] = allNumbers(val) ? val : JSON.parse(val);
-          } catch (e) {
-            obj[key] = val;
-          }
-          return obj;
-        }, {});
-        console.log(cookieObj2);
-    
-        const base64ToDecrypt = cookieObj2.access_token;
-        const hexToDecrypt = window.atob(base64ToDecrypt);
-        const buffToDecrypt = hexStrToArrayBuffer(hexToDecrypt);
-    
-        window.crypto.subtle.decrypt(
-          {
-              name: "AES-CBC",
-              iv
-          },
-          key,
-          buffToDecrypt
-        ).then((decrypted) => { // ArrayBuffer
-          // const arg = String.fromCharCode.apply(null, new Uint8Array(decrypted));
-          const arg = new Uint8Array(decrypted).reduce((data, byte) => {
-              return data + String.fromCharCode(byte);
-          }, '');
-          console.log(arg); // access_token
-
-          window.crypto.subtle.importKey(
-            "raw",
-            hexStrToArrayBuffer("${key_buffer_hex}"),
-            { "name": "AES-CBC" },
-            false,
-            ["encrypt", "decrypt"]
-          ).then((key) => { // CryptoKey
-              const access_token = arg;
-              const textEncoder = new TextEncoder("utf-8");
-              const iv = textEncoder.encode(access_token).slice(0, 16); // Uint8Array
-
-              const base64ToDecrypt = '${encryptedBase64}';
-              const hexToDecrypt = window.atob(base64ToDecrypt);
-              const buffToDecrypt = hexStrToArrayBuffer(hexToDecrypt);
-          
-              window.crypto.subtle.decrypt(
-                {
-                    name: "AES-CBC",
-                    iv
-                },
-                key,
-                buffToDecrypt
-              ).then((decrypted) => { // ArrayBuffer
-                // const arg = String.fromCharCode.apply(null, new Uint8Array(decrypted));
-                const arg = new Uint8Array(decrypted).reduce((data, byte) => {
-                    return data + String.fromCharCode(byte);
-                }, '');
-                // console.log(arg);
-      
-                document.write(arg);
-              }).catch((err) => {
-                  console.log(err);
-              });
-        
-          }).catch((err) => {
-              console.log(err);
-          });
-
-        }).catch((err) => {
-            console.log(err);
-        });
-    
-        /*
-        const strToEncrypt = '';
-        const textEncoder = new TextEncoder("utf-8");
-        const strToEncryptEncoded = textEncoder.encode(strToEncrypt); // Uint8Array
-        
-        window.crypto.subtle.encrypt(
-            {
-                name: "AES-CBC",
-                iv
-            },
-            key,
-            strToEncryptEncoded
-        ).then((encrypted) => { // ArrayBuffer
-            // const arg = String.fromCharCode.apply(null, new Uint8Array(encrypted));
-            const arg = new Uint8Array(encrypted).reduce((data, byte) => {
-                return data + String.fromCharCode(byte);
-            }, '');
-            const encryptedB64 = window.btoa(arg);
-    
-            // const url = location.origin + encodeURIComponent_RFC3986(encryptedB64);
-            // location.href = url;
-        }).catch((err) => {
-            console.log(err);
-        });
-        */
-    }).catch((err) => {
-        console.log(err);
-    });
-
-  }, 0); // 1000 === 1s for testing
-});
+${jsrc}
 </script>
 </head>
 <body>
