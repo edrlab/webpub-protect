@@ -635,13 +635,8 @@ src="..."
 const allow = window.top !== window && document.cookie.access_token;
 if (allow) {
   // percent-encoding for additional obfuscation:
-  // const id = '__content-style'
-  //   .split('')
-  //   .reduce((str, c) => str + `%${parseInt(c.charCodeAt(0)).toString(16)}`, '');
-  // console.log(id);
-
   const el = document.getElementById(
-    decodeURI('%5f%5f%63%6f%6e%74%65%6e%74%2d%73%74%79%6c%65'), // id
+    decodeURI('%5f%5f%63%6f%6e%74%65%6e%74%2d%73%74%79%6c%65'), // '__content-style'
   );
   el.parentNode.removeChild(el);
 } else {

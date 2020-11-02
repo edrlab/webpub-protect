@@ -27,12 +27,58 @@ const cookieObj2 = document.cookie
 console.log(cookieObj2);
 const allow = window.top !== window && cookieObj2.access_token;
 if (allow) {
-  // const id = '__content-style'
-  //   .split('')
-  //   .reduce((str, c) => str + `%${parseInt(c.charCodeAt(0)).toString(16)}`, '');
-  // console.log(id);
+  // const toHex = (n) => {
+  //   return '0123456789ABCDEF'.charAt(n);
+  // };
+  // const encodePercents = (txt) => {
+  //   if (txt === '') {
+  //     return '';
+  //   }
+  //   let str = '';
+  //   for (var i = 0; i < txt.length; i++) {
+  //     let c = txt.charCodeAt(i);
+  //     let bs = new Array();
+  //     if (c > 0x10000) {
+  //       // 4 bytes
+  //       bs[0] = 0xf0 | ((c & 0x1c0000) >>> 18);
+  //       bs[1] = 0x80 | ((c & 0x3f000) >>> 12);
+  //       bs[2] = 0x80 | ((c & 0xfc0) >>> 6);
+  //       bs[3] = 0x80 | (c & 0x3f);
+  //     } else if (c > 0x800) {
+  //       // 3 bytes
+  //       bs[0] = 0xe0 | ((c & 0xf000) >>> 12);
+  //       bs[1] = 0x80 | ((c & 0xfc0) >>> 6);
+  //       bs[2] = 0x80 | (c & 0x3f);
+  //     } else if (c > 0x80) {
+  //       // 2 bytes
+  //       bs[0] = 0xc0 | ((c & 0x7c0) >>> 6);
+  //       bs[1] = 0x80 | (c & 0x3f);
+  //     } else {
+  //       // 1 byte
+  //       bs[0] = c;
+  //     }
+  //     for (var j = 0; j < bs.length; j++) {
+  //       var b = bs[j];
+  //       var hex = toHex((b & 0xf0) >>> 4) + toHex(b & 0x0f);
+  //       str += '%' + hex;
+  //     }
+  //   }
+  //   return str;
+  // };
+  // const encodePercents_ = (txt) => {
+  //   return txt.split('').reduce((str, c) => {
+  //     return str + `%${parseInt(c.charCodeAt(0)).toString(16)}`;
+  //   }, '');
+  // };
+
+  // // %C2%B1
+  // console.log(encodePercents_('±')); // fail!
+  // console.log(encodePercents('±'));
+  // console.log(encodeURI('±'));
+  // console.log(encodeURIComponent('±'));
+
   const el = document.getElementById(
-    decodeURI('%5f%5f%63%6f%6e%74%65%6e%74%2d%73%74%79%6c%65'), // id
+    decodeURI('%5f%5f%63%6f%6e%74%65%6e%74%2d%73%74%79%6c%65'), // '__content-style'
   );
   el.parentNode.removeChild(el);
 } else {
