@@ -172,5 +172,5 @@ window.addEventListener('load', () => {
       .catch((err) => {
         console.log(err);
       });
-  }, 0); // 1000 === 1s for testing
+  }, 1000); // 1000 === 1s for testing
 });

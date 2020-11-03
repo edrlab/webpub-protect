@@ -262,10 +262,27 @@ routerProtect.get('/', (req, res, next) => {
       },
     );
 
+    const swjsrc =
+      ' ' ||
+      fs.readFileSync(
+        path.join(process.cwd(), 'src', 'client', 'inject-sw.js'),
+        {
+          encoding: 'utf8',
+        },
+      );
+
     const originalFileStr = fs
       .readFileSync(path.join(process.cwd(), asset), {
         encoding: 'utf8',
       })
+      .replace(
+        /<head([\s\S]*?)>/gm,
+        `<head$1>
+<script type="text/javascript">
+${swjsrc}
+</script>
+`,
+      )
       .replace(
         /<\/body[\s\S]*?>/gm,
         `
@@ -307,7 +324,7 @@ ${jsrc}
       const encrypted = Buffer.concat(encrypteds);
       const encryptedHex = Buffer.from(encrypted).toString('hex');
       const encryptedBase64 = Buffer.from(encryptedHex).toString('base64');
-      const jsrc = fs
+      const encjsrc = fs
         .readFileSync(
           path.join(process.cwd(), 'src', 'client', 'bootstrap.js'),
           {
@@ -324,10 +341,14 @@ ${jsrc}
 <title>...</title>
 <meta charset="UTF-8" />
 <script type="text/javascript">
-${jsrc}
+${swjsrc}
+</script>
+<script type="text/javascript">
+${encjsrc}
 </script>
 </head>
 <body>
+<p><strong style="font-size:2em;">LOADING...</strong></p>
 </body>
 </html>
 `;
@@ -339,14 +360,18 @@ ${jsrc}
 <title>...</title>
 <meta charset="UTF-8" />
 <script type="text/javascript">
+${swjsrc}
+</script>
+<script type="text/javascript">
 window.addEventListener('load', () => {
   setTimeout(() => {
     document.write(atob('${Buffer.from(originalFileStr).toString('base64')}'));
-  }, 0); // 1000 === 1s for testing
+  }, 500); // 1000 === 1s for testing
 });
 </script>
 </head>
 <body>
+<p><strong style="font-size:2em;">LOADING...</strong></p>
 </body>
 </html>
 `;
@@ -412,6 +437,29 @@ expressApp.use('/protect-root', (req, res) => {
       req.query.checkBoxes || JSON.stringify({})
     }&key1=value1&key2=value2#anchor`,
   );
+});
+
+expressApp.use('/sw.js', (_req, res) => {
+  const nowMinute = new Date();
+  nowMinute.setSeconds(Math.floor(nowMinute.getSeconds() / 5) * 5);
+  const cacheBusterString = [
+    nowMinute.getFullYear(),
+    nowMinute.getMonth(),
+    nowMinute.getDate(),
+    [nowMinute.getHours(), nowMinute.getMinutes(), nowMinute.getSeconds()].join(
+      ':',
+    ),
+  ].join('-');
+
+  const jsrc = fs
+    .readFileSync(
+      path.join(process.cwd(), 'src', 'client', 'service-worker.js'),
+      {
+        encoding: 'utf8',
+      },
+    )
+    .replace(/__CACHE_BUSTER__/, cacheBusterString);
+  return res.status(200).type('application/javascript').send(jsrc);
 });
 
 expressApp.use((_req, res) => {
