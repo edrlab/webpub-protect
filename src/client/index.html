@@ -169,6 +169,9 @@
           via the context menu (typically: "inspect element" menu item)
         </li>
         <li>
+          the document images are displayed as-is, without any obfuscation
+        </li>
+        <li>
           the browser's "view source" feature (or a fetch request's response
           body) contains human-readable "static" document markup
         </li>
@@ -431,6 +434,166 @@ const toggle = (activate) => {
 };
 </textarea
                     >
+                  </details>
+                </p>
+              </li>
+              <li>
+                <input
+                  type="checkbox"
+                  id="checkBox_11"
+                  onclick="window.onCheckBoxClick('checkBox_11', true)"
+                />
+                the document images are <strong>obfusated</strong> (note that
+                there is an intentional 1s delay for this demo, before the
+                script the script de-obfuscates the images)
+                <p>
+                  <details>
+                    <summary>
+                      <u>Technique</u>
+                    </summary>
+                    <span
+                      >(server side, here: Javascript Node Express middleware,
+                      with Javascript execution on the client side)</span
+                    >
+                    <textarea readonly wrap="on">
+// On the server side (in this demo, NodeJS Express middleware)
+// images are served from the filesystem (here, using a pure Javascript library called Jimp)
+// but images are obfuscated before they are passed to their HTTP response
+// (here we use a simple reversible mangling algorithm, but this could be more sophisticated)
+Jimp.read(path.join(process.cwd(), asset))
+.then((image) => {
+  image.quality(90);
+  image.rgba(true);
+  console.log(
+    '>>>>>>>>>>>>>>>>>>>>>>>> JIMP image: ',
+    image.getMIME(),
+    asset,
+    image.bitmap.data.length,
+  );
+  imageObfuscation.obfuscate(
+    image.bitmap.data,
+    image.bitmap.width,
+    image.bitmap.height,
+  );
+  image
+    .getBufferAsync(image.getMIME())
+    .then((buffer) => {
+      return res.status(200).type(image.getMIME()).send(buffer);
+    })
+    .catch((err) => {
+      console.error(err);
+      return next();
+    });
+})
+.catch((err) => {
+  console.error(err);
+  return next();
+});
+
+// On the client side, HTML Canvas is used to process the loaded images,
+// and the reverse mangling logic of the obfuscation algorithm is executed.
+// The Canvas output is then fed to images via data / base64-encoded URLs
+const onImageLoad = (evt_) => {
+  const img_ = evt_.currentTarget;
+  const srcUrlPath = new URL(img_.src).pathname;
+  const isPNG = srcUrlPath.endsWith('.png');
+  const isGIF = srcUrlPath.endsWith('.gif');
+  const isWEBP = srcUrlPath.endsWith('.webp');
+  const canHaveAlpha = isWEBP || isGIF || isPNG;
+  setTimeout(() => {
+    const img = new Image();
+    img.onload = () => {
+      // https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas#Browser_compatibility
+      // const canvas = new OffscreenCanvas();
+      const canvas = document.createElement('CANVAS');
+      // canvas.setAttribute('width', img.offsetWidth); // width
+      // canvas.setAttribute('height', img.offsetHeight); // height
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      // ctx.rotate((90 * Math.PI) / 180); // 90 degrees
+      ctx.drawImage(
+        img,
+        0,
+        0,
+        img.width,
+        img.height,
+        0,
+        0,
+        img.width,
+        img.height,
+      );
+      const imageData = ctx.getImageData(0, 0, img.width, img.height);
+      window.image_obfuscation.deobfuscate(
+        imageData.data,
+        imageData.width,
+        imageData.height,
+      );
+      ctx.putImageData(imageData, 0, 0);
+      const url = canvas.toDataURL(canHaveAlpha ? 'image/png' : 'image/jpeg');
+      img_.removeEventListener('load', onImageLoad);
+      console.log(
+        img.width,
+        img.height,
+        img_.width,
+        img_.height,
+        img_.style.width,
+        img_.style.height,
+        img_.offsetWidth,
+        img_.offsetHeight,
+      );
+      // console.log(url);
+      console.log('IMAGE MOD: ', img_.src);
+      img_.src = url;
+    };
+    img.src = img_.src;
+  }, 1000); // delay is to visualize changes in the demo, this can be removed in production
+};
+const feature11 = (activate) => {
+  const images = document.querySelectorAll('img[src]');
+  images.forEach((img) => {
+    let dataSrc = img.getAttribute('data-src');
+    if (!dataSrc) {
+      const src = img.getAttribute('src');
+      img.setAttribute('data-src', src);
+      dataSrc = src;
+    }
+
+    // const style = window.getComputedStyle(img);
+    // if (!img.getAttribute('data-width')) {
+    //   console.log(style.width);
+    //   if (style.width) {
+    //     img.setAttribute('data-width', style.width);
+    //   }
+    // }
+    // if (!img.getAttribute('data-height')) {
+    //   console.log(style.width);
+    //   if (style.height) {
+    //     img.setAttribute('data-height', style.height);
+    //   }
+    // }
+
+    if (activate) {
+      console.log('IMAGE ON dataSrc: ', dataSrc);
+      img.removeAttribute('src');
+      // img.style.width = 'auto !important'; // doesn't work!
+      // img.style.setProperty('width', 'auto', 'important');
+      // img.style.setProperty('height', 'auto', 'important');
+      img.addEventListener('load', onImageLoad);
+      setTimeout(() => {
+        img.setAttribute('src', dataSrc);
+      }, 0);
+    } else {
+      console.log('IMAGE OFF dataSrc: ', dataSrc);
+      img.removeEventListener('load', onImageLoad);
+      img.removeAttribute('src');
+      setTimeout(() => {
+        img.setAttribute('src', dataSrc);
+      }, 0);
+    }
+  });
+};
+                    </textarea>
                   </details>
                 </p>
               </li>

@@ -97,13 +97,114 @@ const go = () => {
     document.title = 'about:blank';
   }
 
-  document.getElementById('location').textContent = location.href;
+  // document.getElementById('location').textContent = location.href;
 
   // const hasStorageAccess = await document.hasStorageAccess();
   // console.log('hasStorageAccess', hasStorageAccess);
 
   // const requestStorageAccess = await document.requestStorageAccess();
   // console.log('requestStorageAccess', requestStorageAccess);
+
+  const onImageLoad = (evt_) => {
+    const img_ = evt_.currentTarget;
+    const srcUrlPath = new URL(img_.src).pathname;
+    const isPNG = srcUrlPath.endsWith('.png');
+    const isGIF = srcUrlPath.endsWith('.gif');
+    const isWEBP = srcUrlPath.endsWith('.webp');
+    const canHaveAlpha = isWEBP || isGIF || isPNG;
+    setTimeout(() => {
+      const img = new Image();
+      img.onload = () => {
+        // https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas#Browser_compatibility
+        // const canvas = new OffscreenCanvas();
+        const canvas = document.createElement('CANVAS');
+        // canvas.setAttribute('width', img.offsetWidth); // width
+        // canvas.setAttribute('height', img.offsetHeight); // height
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        // ctx.rotate((90 * Math.PI) / 180); // 90 degrees
+        ctx.drawImage(
+          img,
+          0,
+          0,
+          img.width,
+          img.height,
+          0,
+          0,
+          img.width,
+          img.height,
+        );
+        const imageData = ctx.getImageData(0, 0, img.width, img.height);
+        window.image_obfuscation.deobfuscate(
+          imageData.data,
+          imageData.width,
+          imageData.height,
+        );
+        ctx.putImageData(imageData, 0, 0);
+        const url = canvas.toDataURL(canHaveAlpha ? 'image/png' : 'image/jpeg');
+        img_.removeEventListener('load', onImageLoad);
+        console.log(
+          img.width,
+          img.height,
+          img_.width,
+          img_.height,
+          img_.style.width,
+          img_.style.height,
+          img_.offsetWidth,
+          img_.offsetHeight,
+        );
+        // console.log(url);
+        console.log('IMAGE MOD: ', img_.src);
+        img_.src = url;
+      };
+      img.src = img_.src;
+    }, 1000); // delay is to visualize changes in the demo, this can be removed in production
+  };
+  const feature11 = (activate) => {
+    const images = document.querySelectorAll('img[src]');
+    images.forEach((img) => {
+      let dataSrc = img.getAttribute('data-src');
+      if (!dataSrc) {
+        const src = img.getAttribute('src');
+        img.setAttribute('data-src', src);
+        dataSrc = src;
+      }
+
+      // const style = window.getComputedStyle(img);
+      // if (!img.getAttribute('data-width')) {
+      //   console.log(style.width);
+      //   if (style.width) {
+      //     img.setAttribute('data-width', style.width);
+      //   }
+      // }
+      // if (!img.getAttribute('data-height')) {
+      //   console.log(style.width);
+      //   if (style.height) {
+      //     img.setAttribute('data-height', style.height);
+      //   }
+      // }
+
+      if (activate) {
+        console.log('IMAGE ON dataSrc: ', dataSrc);
+        img.removeAttribute('src');
+        // img.style.width = 'auto !important'; // doesn't work!
+        // img.style.setProperty('width', 'auto', 'important');
+        // img.style.setProperty('height', 'auto', 'important');
+        img.addEventListener('load', onImageLoad);
+        setTimeout(() => {
+          img.setAttribute('src', dataSrc);
+        }, 0);
+      } else {
+        console.log('IMAGE OFF dataSrc: ', dataSrc);
+        img.removeEventListener('load', onImageLoad);
+        img.removeAttribute('src');
+        setTimeout(() => {
+          img.setAttribute('src', dataSrc);
+        }, 0);
+      }
+    });
+  };
 
   const onContextmenu = (evt) => {
     evt.preventDefault();
@@ -238,6 +339,8 @@ const go = () => {
       feature7(val);
     } else if (key === 'checkBox_8') {
       feature8(val);
+    } else if (key === 'checkBox_11') {
+      feature11(val);
     }
   });
 
@@ -254,6 +357,8 @@ const go = () => {
       feature7(evt.data.checkBox_7);
     } else if (typeof evt.data.checkBox_8 !== 'undefined') {
       feature8(evt.data.checkBox_8);
+    } else if (typeof evt.data.checkBox_11 !== 'undefined') {
+      feature11(evt.data.checkBox_11);
     }
   });
 };

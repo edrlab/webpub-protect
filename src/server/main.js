@@ -6,6 +6,8 @@ const fs = require('fs');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const uuid = require('uuid');
+const Jimp = require('jimp');
+const imageObfuscation = require('../client/image_obfuscation');
 
 // const http = require('http');
 
@@ -66,6 +68,18 @@ const setResponseCORS = (res) => {
 };
 
 const expressApp = express();
+
+expressApp.set('etag', false);
+expressApp.use((_req, res, next) => {
+  res.setHeader('Surrogate-Control', 'no-store');
+  res.setHeader(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate',
+  );
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
 
 expressApp.use(cookieParser('webpub-protect'));
 
@@ -249,14 +263,61 @@ routerProtect.get('/', (req, res, next) => {
     }
   }
 
-  try {
-    if (!/\.html?$/.test(asset)) {
-      debug('skip non HTML', req.url);
-      return next();
-    }
+  const isHTML = /\.html?$/.test(asset);
+  const isIMG = /\.(png|jpg|jpeg)?$/.test(asset);
 
+  if (!isHTML && !isIMG) {
+    debug('skip non HTML or IMG', req.url);
+    return next();
+  }
+
+  const obfuscateImage = checkBoxes.checkBox_11;
+  if (isIMG && !obfuscateImage) {
+    debug('skip non-obfuscated IMG', req.url);
+    return next();
+  }
+
+  try {
+    if (isIMG) {
+      Jimp.read(path.join(process.cwd(), asset))
+        .then((image) => {
+          image.quality(90);
+          image.rgba(true);
+          console.log(
+            '>>>>>>>>>>>>>>>>>>>>>>>> JIMP image: ',
+            image.getMIME(),
+            asset,
+            image.bitmap.data.length,
+          );
+          imageObfuscation.obfuscate(
+            image.bitmap.data,
+            image.bitmap.width,
+            image.bitmap.height,
+          );
+          image
+            .getBufferAsync(image.getMIME())
+            .then((buffer) => {
+              return res.status(200).type(image.getMIME()).send(buffer);
+            })
+            .catch((err) => {
+              console.error(err);
+              return next();
+            });
+        })
+        .catch((err) => {
+          console.error(err);
+          return next();
+        });
+      return;
+    }
     const jsrc = fs.readFileSync(
       path.join(process.cwd(), 'src', 'client', 'inject.js'),
+      {
+        encoding: 'utf8',
+      },
+    );
+    const jsrcImg = fs.readFileSync(
+      path.join(process.cwd(), 'src', 'client', 'image_obfuscation.js'),
       {
         encoding: 'utf8',
       },
@@ -278,6 +339,9 @@ routerProtect.get('/', (req, res, next) => {
       .replace(
         /<head([\s\S]*?)>/gm,
         `<head$1>
+<script type="text/javascript">
+${jsrcImg}
+</script>
 <script type="text/javascript">
 ${swjsrc}
 </script>
