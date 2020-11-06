@@ -217,14 +217,20 @@ const go = () => {
     }
   };
 
+  const dragStyle =
+    '-webkit-user-drag: none; -khtml-user-drag: none; -moz-user-drag: none; -ms-user-drag: none; user-drag: none; -webkit-pointer-events: none; -khtml-pointer-events: none; -moz-pointer-events: none; -ms-pointer-events: none; pointer-events: none;';
   const onDragstart = (evt) => {
     evt.preventDefault();
   };
   const feature7 = (activate) => {
+    const bodyStyle = document.body.getAttribute('style') || '';
+
     if (activate) {
       document.body.addEventListener('dragstart', onDragstart);
+      document.body.setAttribute('style', bodyStyle + dragStyle);
     } else {
       document.body.removeEventListener('dragstart', onDragstart);
+      document.body.setAttribute('style', bodyStyle.replace(dragStyle, ''));
     }
   };
 
@@ -251,14 +257,8 @@ const go = () => {
   const onSelectstart = (evt) => {
     evt.preventDefault();
   };
-  const selectStyle = `
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  `;
+  const selectStyle =
+    '-webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;';
   const feature5 = (activate) => {
     const bodyStyle = document.body.getAttribute('style') || '';
 
