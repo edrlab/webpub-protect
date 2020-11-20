@@ -161,6 +161,101 @@ const go = () => {
       img.src = img_.src;
     }, 1000); // delay is to visualize changes in the demo, this can be removed in production
   };
+
+  // feature12 ----
+  const block = () => {
+    if (block.blocked) {
+      return;
+    }
+    block.blocked = true;
+
+    let jam = 10;
+    const info = () => {
+      document.body.innerHTML = `<span style="font-size: 30px;">CLOSE WEB INSPECTOR, OR ... [${jam}]</span>`;
+    };
+    setTimeout(() => {
+      document.head.innerHTML = '';
+      info();
+    }, 0);
+    const timeout = 500;
+    const tock = () => {
+      if (jam <= 0) {
+        document.body.innerHTML = '<span style="font-size: 30px;">JAM!</span>';
+        // alert('JAM!');
+        // while (window) {
+        //   eval('debugger'); // jam!
+        //   // debugger;
+        // }
+      } else {
+        jam--;
+        info();
+        setTimeout(tock, timeout);
+      }
+    };
+    setTimeout(tock, timeout);
+
+    document.body.removeAttribute('style');
+  };
+  // ---
+  function func() {}
+  func.toString = block;
+  // ---
+  const regexp = /./;
+  regexp.toString = block;
+  // ---
+  // const el = document.createElement('div');
+  const el = new Image();
+  Object.defineProperty(el, 'id', {
+    get: block,
+  });
+  // ---
+  const tick = () => {
+    if (!feature12_Activated) {
+      // || block.blocked
+      return;
+    }
+
+    // doesn't work consistently on Firefox, Chrome and Safari
+    // => false positives (BAD!!), =
+    // or no triggering (apart from the console logging),
+    // or lazy-loading only when actual console tab is open,
+    // or lazy-loading only when the actual object is expanded in the console
+    // etc.
+    // (web browser actively "plug" these holes)
+
+    // as expected, false positive on Firefox, Safari, Chrome
+    // console.log(el.id);
+
+    // no false positives
+    // ... but Firefox only lazy-loads 'id' when expanding the object in the console (which allows plenty of time to explore debugger, etc.)
+    // console.log(el);
+    // console.log('%c', el);
+
+    // false positives on Chrome, Safari, not on Firefox (however lazy-load only when actual console tab is open)
+    // console.log(regexp);
+    // this voids the false positive on Safari, but not Chrome, but creates a false positive on Firefox!
+    // console.log('%c', regexp);
+
+    // false positives on Chrome, Safari, not on Firefox (however does not trigger at all)
+    // console.log(func);
+    // false positives on Chrome, Firefox, but not Safari
+    // console.log('%c', func);
+
+    // console.clear(); // can be prevented by the "preserve log" user option
+    requestAnimationFrame(tick);
+  };
+  // setInterval() works too
+  // ---
+  let feature12_Activated = false;
+  const feature12 = (activate) => {
+    console.log(`feature12 ${activate}`);
+
+    feature12_Activated = activate;
+    if (feature12_Activated) {
+      requestAnimationFrame(tick);
+    }
+  };
+
   const feature11 = (activate) => {
     const images = document.querySelectorAll('img[src]');
     images.forEach((img) => {
@@ -341,6 +436,8 @@ const go = () => {
       feature8(val);
     } else if (key === 'checkBox_11') {
       feature11(val);
+    } else if (key === 'checkBox_12') {
+      feature12(val);
     }
   });
 
@@ -359,6 +456,9 @@ const go = () => {
       feature8(evt.data.checkBox_8);
     } else if (typeof evt.data.checkBox_11 !== 'undefined') {
       feature11(evt.data.checkBox_11);
+    } else if (typeof evt.data.checkBox_12 !== 'undefined') {
+      // feature12(evt.data.checkBox_12);
+      window.location.reload();
     }
   });
 };
